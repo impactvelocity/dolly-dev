@@ -1,0 +1,20 @@
+{
+  "extends": "@webmcp-sdk/typescript-config/nextjs.json",
+  "compilerOptions": {
+    "types": ["node", "react", "react-dom"],
+    // The vendored coss ui components (components/ui) aren't written against
+    // exactOptionalPropertyTypes, so relax it for this app only.
+    "exactOptionalPropertyTypes": false,
+    "paths": {
+      "@/*": ["./*"]
+    }
+  },
+  "include": [
+    "next-env.d.ts",
+    "**/*.ts",
+    "**/*.tsx",
+    ".next/types/**/*.ts",
+    ".next/dev/types/**/*.ts"
+  ],
+  "exclude": ["node_modules"]
+}

@@ -1,0 +1,31 @@
+{
+  "name": "@webmcp-sdk/dolly",
+  "version": "0.0.0",
+  "private": true,
+  "scripts": {
+    "build": "next build --webpack",
+    "check-types": "tsc --noEmit",
+    "dev": "next dev --port 3002",
+    "lint": "eslint .",
+    "start": "next start --port 3002"
+  },
+  "dependencies": {
+    "@webmcp-sdk/experience": "workspace:*",
+    "geist": "catalog:",
+    "next": "catalog:",
+    "react": "catalog:",
+    "react-dom": "catalog:",
+    "simplebar-react": "^3.3.2"
+  },
+  "devDependencies": {
+    "@tailwindcss/postcss": "catalog:",
+    "@types/node": "catalog:",
+    "@types/react": "catalog:",
+    "@types/react-dom": "catalog:",
+    "@webmcp-sdk/typescript-config": "workspace:*",
+    "eslint": "catalog:",
+    "eslint-config-next": "catalog:",
+    "tailwindcss": "catalog:",
+    "typescript": "catalog:"
+  }
+}

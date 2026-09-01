@@ -1,0 +1,23 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "console",
+      "runtimeExecutable": "pnpm",
+      "runtimeArgs": ["--filter", "@webmcp-sdk/console", "dev"],
+      "port": 3001
+    },
+    {
+      "name": "dolly",
+      "runtimeExecutable": "pnpm",
+      "runtimeArgs": ["--filter", "@webmcp-sdk/dolly", "dev"],
+      "port": 3002
+    },
+    {
+      "name": "showcase",
+      "runtimeExecutable": "pnpm",
+      "runtimeArgs": ["--filter", "@webmcp-sdk/showcase", "dev"],
+      "port": 3000
+    }
+  ]
+}
