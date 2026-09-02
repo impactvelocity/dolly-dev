@@ -19,6 +19,14 @@ const calSans = Cal_Sans({ weight: "400", subsets: ["latin"], variable: "--font-
 export const metadata: Metadata = {
   title: "Dolly CRM — Contacts and deals",
   description: "A mock CRM example for @dolly/rig.",
+  icons: {
+    icon: [
+      { url: "/favicon.ico", sizes: "any" },
+      { url: "/favicon-16x16.png", type: "image/png", sizes: "16x16" },
+      { url: "/favicon-32x32.png", type: "image/png", sizes: "32x32" },
+    ],
+    apple: "/apple-touch-icon.png",
+  },
 };
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
