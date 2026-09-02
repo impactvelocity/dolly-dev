@@ -263,15 +263,15 @@ export default function Home() {
         {/* ---- Demo video + links ---------------------------------- */}
         <section id="video" className="mx-auto max-w-6xl scroll-mt-28 px-6 pb-20 pt-6">
           <CornerMarks className="mx-auto max-w-4xl">
-            <div className="relative flex aspect-video w-full flex-col items-center justify-center gap-4 overflow-hidden rounded-xl bg-[var(--screen-deep)]">
-              <span className="grid size-16 place-items-center rounded-full border border-white/25 bg-white/10 backdrop-blur-sm">
-                <svg width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden="true">
-                  <path d="M6.5 4.5v11l9-5.5-9-5.5Z" fill="#fff" />
-                </svg>
-              </span>
-              <p className="mono m-0 text-[0.7rem] uppercase tracking-[0.18em] text-[var(--on-dark-muted)]">
-                Demo video coming soon
-              </p>
+            <div className="relative aspect-video w-full overflow-hidden rounded-xl bg-[var(--screen-deep)]">
+              <iframe
+                className="absolute inset-0 h-full w-full"
+                src="https://www.youtube-nocookie.com/embed/VyHd8ql8RHY"
+                title="Dolly demo video"
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                referrerPolicy="strict-origin-when-cross-origin"
+                allowFullScreen
+              />
             </div>
           </CornerMarks>
           <div className="mx-auto mt-10 flex max-w-4xl flex-col gap-8 sm:flex-row sm:items-center sm:justify-between">
