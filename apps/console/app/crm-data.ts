@@ -29,7 +29,7 @@ export const DEAL_STAGES: DealStage[] = ["Qualified", "Proposal", "Negotiation",
 export const CONTACT_STATUSES: ContactStatus[] = ["Lead", "Customer", "Churned"];
 
 export const defaultSettings: CrmSettings = {
-  crmName: "Relay CRM",
+  crmName: "Dolly CRM",
   workspaceName: "Acme Inc.",
 };
 

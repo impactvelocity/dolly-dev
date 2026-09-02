@@ -1,26 +1,24 @@
 export { detectAgent } from "./agent-detection";
 export type { AgentBrand, DetectedAgent } from "./agent-detection";
-export { AgentStatusBadge, AgentStatusHeader } from "./agent-status";
+export { AgentStatusHeader } from "./agent-status";
 export { AgentHistoryDrawer } from "./agent-history-drawer";
 export type { AgentHistoryDrawerProps } from "./agent-history-drawer";
 export { AgentToolsDrawer } from "./agent-tools-drawer";
 export type { AgentToolsDrawerProps } from "./agent-tools-drawer";
 export type {
-  AgentStatusBadgeProps,
-  AgentStatusCorner,
   AgentStatusHeaderProps,
   AgentStatusShow,
 } from "./agent-status";
 export { createChatGPTDeeplink } from "./deeplink";
 export {
-  WebMCPExperienceProvider,
-  useOptionalWebMCPExperience,
-  useWebMCPExperience,
-} from "./experience-provider";
+  RigProvider,
+  useOptionalRig,
+  useRig,
+} from "./rig-provider";
 export type {
-  WebMCPExperienceProviderProps,
+  RigProviderProps,
   WorkToastMode,
-} from "./experience-provider";
+} from "./rig-provider";
 export { OpenInButton } from "./open-in-button";
 export { OpenInChatGPTButton } from "./open-in-chatgpt-button";
 export { OpenAILogo } from "./openai-logo";
@@ -34,9 +32,9 @@ export type {
   ConfirmOptions,
   ConfirmTone,
   ConnectionState,
-  ExperienceCapability,
-  ExperiencePhase,
-  ExperienceSnapshot,
+  RigCapability,
+  RigPhase,
+  RigSnapshot,
   GlowOptions,
   HighlightOptions,
   LogTaskOptions,
@@ -46,9 +44,9 @@ export type {
   TaskLogEntry,
   TaskLogStatus,
   ToolInfo,
-  WebMCPExperienceApi,
-  WebMCPExperienceMode,
-  WebMCPExperienceTheme,
+  RigApi,
+  RigMode,
+  RigTheme,
   WebMCPRegistrationOptions,
   WebMCPTool,
 } from "./types";

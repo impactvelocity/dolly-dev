@@ -2,7 +2,7 @@ import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
   reactStrictMode: true,
-  transpilePackages: ["@webmcp-sdk/experience"],
+  transpilePackages: ["@dolly/rig"],
 };
 
 export default nextConfig;

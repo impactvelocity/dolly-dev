@@ -3,11 +3,9 @@
 import { useEffect, useRef, useState } from "react";
 
 import { AgentHistoryDrawer, type AgentHistoryDrawerProps } from "./agent-history-drawer";
-import { useWebMCPExperience } from "./experience-provider";
+import { useRig } from "./rig-provider";
 import { OpenAILogo } from "./openai-logo";
-import type { ExperienceSnapshot } from "./types";
-
-export type AgentStatusCorner = "top-left" | "top-right" | "bottom-left" | "bottom-right";
+import type { RigSnapshot } from "./types";
 
 /**
  * Which connections the status surfaces respond to:
@@ -44,7 +42,6 @@ interface AgentStatusCommonProps {
   connectedClassName?: string;
   /**
    * Override the connected label ("ChatGPT Connected" / "Agent Connected").
-   * On the badge this is the tooltip and accessible label.
    */
   connectedLabel?: string;
 }
@@ -92,11 +89,6 @@ export interface AgentStatusHeaderProps extends AgentStatusCommonProps {
   historyDrawer?: Omit<AgentHistoryDrawerProps, "open" | "onClose">;
 }
 
-export interface AgentStatusBadgeProps extends AgentStatusCommonProps {
-  /** Which viewport corner the badge floats in. Defaults to "bottom-right". */
-  corner?: AgentStatusCorner;
-}
-
 type StatusTone = "live" | "muted" | "working" | "success" | "error";
 
 interface StatusView {
@@ -105,7 +97,7 @@ interface StatusView {
 }
 
 function deriveStatus(
-  snapshot: ExperienceSnapshot,
+  snapshot: RigSnapshot,
   showActivity: boolean,
   matched: AgentStatusShow | null,
   connectedLabel?: string,
@@ -130,7 +122,7 @@ function deriveStatus(
 const MUTED_VIEW: StatusView = { tone: "muted", label: "No agent connected" };
 
 function matchedConnection(
-  snapshot: ExperienceSnapshot,
+  snapshot: RigSnapshot,
   show: AgentStatusShow[],
 ): AgentStatusShow | null {
   const kind: AgentStatusShow | null =
@@ -141,20 +133,16 @@ function matchedConnection(
 function StatusIcon({
   tone,
   branded,
-  variant,
 }: {
   tone: StatusTone;
   branded: boolean;
-  variant: "header" | "badge";
 }) {
-  // The header swaps to a spinner while working; the badge keeps the brand
-  // logo and signals activity by pulsing it instead.
-  const showLogo = branded && (variant === "badge" || tone !== "working");
-  if (showLogo) {
-    return <OpenAILogo className="webmcp-exp-status__logo" />;
+  // The header swaps the brand logo for a spinner while working.
+  if (branded && tone !== "working") {
+    return <OpenAILogo className="webmcp-rig-status__logo" />;
   }
   return (
-    <span className="webmcp-exp-status__dot" aria-hidden="true">
+    <span className="webmcp-rig-status__dot" aria-hidden="true">
       {tone === "working" ? <i /> : null}
     </span>
   );
@@ -199,7 +187,7 @@ function HeaderProgressBar({
 
   return (
     <span
-      className={`webmcp-exp-status__progress${active ? "" : " webmcp-exp-status__progress--done"}`}
+      className={`webmcp-rig-status__progress${active ? "" : " webmcp-rig-status__progress--done"}`}
       style={{ width: `${progress}%`, ...(color ? { backgroundColor: color } : {}) }}
       aria-hidden="true"
     />
@@ -226,15 +214,15 @@ function AnimatedLabel({ text }: { text: string }) {
   }, [previous, current]);
 
   return (
-    <span className="webmcp-exp-status__labelwrap">
+    <span className="webmcp-rig-status__labelwrap">
       {previous !== null ? (
-        <span className="webmcp-exp-status__label webmcp-exp-status__label--out" aria-hidden="true">
+        <span className="webmcp-rig-status__label webmcp-rig-status__label--out" aria-hidden="true">
           {previous}
         </span>
       ) : null}
       <span
         key={current}
-        className={`webmcp-exp-status__label${previous !== null ? " webmcp-exp-status__label--in" : ""}`}
+        className={`webmcp-rig-status__label${previous !== null ? " webmcp-rig-status__label--in" : ""}`}
       >
         {current}
       </span>
@@ -265,7 +253,7 @@ export function AgentStatusHeader({
   connectedClassName,
   connectedLabel,
 }: AgentStatusHeaderProps) {
-  const { snapshot, openOnboarding, history } = useWebMCPExperience();
+  const { snapshot, openOnboarding, history } = useRig();
   const [historyOpen, setHistoryOpen] = useState(false);
 
   const matched = matchedConnection(snapshot, show);
@@ -292,11 +280,11 @@ export function AgentStatusHeader({
   const branded = matched === "chatgpt";
   const view = deriveStatus(snapshot, showActivity, matched, connectedLabel);
   const classes = [
-    "webmcp-exp-status",
-    "webmcp-exp-status--header",
-    `webmcp-exp-status--${view.tone}`,
-    branded ? "webmcp-exp-status--branded" : null,
-    matched !== null ? "webmcp-exp-status--connected" : null,
+    "webmcp-rig-status",
+    "webmcp-rig-status--header",
+    `webmcp-rig-status--${view.tone}`,
+    branded ? "webmcp-rig-status--branded" : null,
+    matched !== null ? "webmcp-rig-status--connected" : null,
     className,
     matched !== null ? connectedClassName : null,
   ]
@@ -309,30 +297,30 @@ export function AgentStatusHeader({
       {showProgress ? (
         <HeaderProgressBar active={view.tone === "working"} color={progressColor} />
       ) : null}
-      <span className="webmcp-exp-status__side" role="status" aria-live="polite">
-        <StatusIcon tone={view.tone} branded={branded} variant="header" />
+      <span className="webmcp-rig-status__side" role="status" aria-live="polite">
+        <StatusIcon tone={view.tone} branded={branded} />
         <AnimatedLabel text={view.label} />
         {showIndicator && branded && view.tone !== "working" ? (
-          <span className="webmcp-exp-status__indicator" aria-hidden="true" />
+          <span className="webmcp-rig-status__indicator" aria-hidden="true" />
         ) : null}
       </span>
-      <span className="webmcp-exp-status__actions">
+      <span className="webmcp-rig-status__actions">
         {showHistory ? (
           <button
             type="button"
-            className="webmcp-exp-status__info"
+            className="webmcp-rig-status__info"
             onClick={onHistoryClick ?? (() => setHistoryOpen(true))}
           >
             <HistoryIcon />
             {historyLabel}
             {history.length > 0 ? (
-              <span className="webmcp-exp-status__count">{history.length}</span>
+              <span className="webmcp-rig-status__count">{history.length}</span>
             ) : null}
           </button>
         ) : null}
         {showInfo ? (
-          <button type="button" className="webmcp-exp-status__info" onClick={onInfoClick ?? openOnboarding}>
-            <span className="webmcp-exp-status__info-icon" aria-hidden="true">i</span>
+          <button type="button" className="webmcp-rig-status__info" onClick={onInfoClick ?? openOnboarding}>
+            <span className="webmcp-rig-status__info-icon" aria-hidden="true">i</span>
             {infoLabel}
           </button>
         ) : null}
@@ -346,7 +334,7 @@ export function AgentStatusHeader({
 function HistoryIcon() {
   return (
     <svg
-      className="webmcp-exp-status__history-icon"
+      className="webmcp-rig-status__history-icon"
       viewBox="0 0 14 14"
       width="14"
       height="14"
@@ -363,51 +351,3 @@ function HistoryIcon() {
   );
 }
 
-/**
- * A minimal, icon-only badge fixed to a viewport corner. Clicking it opens
- * the capability onboarding dialog; the status text lives in the tooltip
- * and accessible label.
- */
-export function AgentStatusBadge({
-  show = DEFAULT_SHOW,
-  corner = "bottom-right",
-  showActivity = true,
-  hideWhenUnavailable = true,
-  className,
-  connectedClassName,
-  connectedLabel,
-}: AgentStatusBadgeProps) {
-  const { snapshot, openOnboarding } = useWebMCPExperience();
-
-  const matched = matchedConnection(snapshot, show);
-  // Hidden without a matching connection — except while work is running,
-  // so manually driven states (e.g. a dev page) still surface.
-  if (hideWhenUnavailable && matched === null && snapshot.phase === "idle") return null;
-
-  const branded = matched === "chatgpt";
-  const view = deriveStatus(snapshot, showActivity, matched, connectedLabel);
-  const classes = [
-    "webmcp-exp-status",
-    "webmcp-exp-status--badge",
-    `webmcp-exp-status--corner-${corner}`,
-    `webmcp-exp-status--${view.tone}`,
-    branded ? "webmcp-exp-status--branded" : null,
-    className,
-    matched !== null ? connectedClassName : null,
-  ]
-    .filter(Boolean)
-    .join(" ");
-
-  return (
-    <button
-      type="button"
-      className={classes}
-      onClick={openOnboarding}
-      title={view.label}
-      aria-label={view.label}
-    >
-      <StatusIcon tone={view.tone} branded={branded} variant="badge" />
-      {view.tone === "working" ? <AnimatedLabel text={view.label} /> : null}
-    </button>
-  );
-}

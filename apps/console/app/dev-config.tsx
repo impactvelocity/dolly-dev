@@ -11,8 +11,6 @@ import {
 } from "react";
 
 export interface DevConfig {
-  /** Render the floating AgentStatusBadge. */
-  showBadge: boolean;
   /** Render the AgentStatusHeader bar. */
   showHeader: boolean;
   /**
@@ -38,10 +36,9 @@ export interface DevConfig {
   highlightOverlayOpacity: number;
 }
 
-// Defaults mirror the SDK's built-in appearance (see packages/experience
+// Defaults mirror the SDK's built-in appearance (see packages/rig
 // styles.css) plus the highlight config the console shipped with.
 export const DEFAULT_DEV_CONFIG: DevConfig = {
-  showBadge: true,
   showHeader: true,
   headerProgressText: true,
   showHistory: true,
@@ -94,6 +91,9 @@ export function DevConfigProvider({ children }: { children: ReactNode }) {
   // the same initial tree.
   useEffect(() => {
     const stored = readStoredConfig();
+    // headerProgressText no longer has a toggle — the default always wins so
+    // a stale stored `false` can't leave the header progress stuck off.
+    if (stored) delete stored.headerProgressText;
     // eslint-disable-next-line react-hooks/set-state-in-effect -- localStorage can only be read after mount; the initial render must match the server.
     if (stored) setConfig({ ...DEFAULT_DEV_CONFIG, ...stored });
   }, []);

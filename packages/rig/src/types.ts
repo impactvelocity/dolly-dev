@@ -1,14 +1,16 @@
-export type ExperiencePhase = "idle" | "working" | "success" | "error";
+import type { ReactNode } from "react";
 
-export type WebMCPExperienceMode = "light" | "dark" | "system";
+export type RigPhase = "idle" | "working" | "success" | "error";
 
-export interface WebMCPExperienceTheme {
+export type RigMode = "light" | "dark" | "system";
+
+export interface RigTheme {
   /**
-   * Color scheme for every experience surface (status header, badges,
+   * Color scheme for every rig surface (status header, badges,
    * dialogs, drawers, toasts). "system" follows prefers-color-scheme.
    * Defaults to "light".
    */
-  mode?: WebMCPExperienceMode;
+  mode?: RigMode;
   /**
    * Brand color — used for highlights, onboarding buttons, progress
    * segments, spinners, and focus rings. Defaults to near-black in light
@@ -24,13 +26,13 @@ export interface WebMCPExperienceTheme {
 
 export type ConnectionState = "unknown" | "unavailable" | "ready" | "connected";
 
-export interface ExperienceCapability {
+export interface RigCapability {
   title: string;
   description: string;
 }
 
-export interface ExperienceSnapshot {
-  phase: ExperiencePhase;
+export interface RigSnapshot {
+  phase: RigPhase;
   message: string | null;
   selector: string | null;
   connection: ConnectionState;
@@ -158,8 +160,8 @@ export interface WebMCPTool<TInput = Record<string, unknown>, TResult = unknown>
    * history drawer; never sent to the agent.
    */
   log?: string;
-  /** Icon (usually an emoji) shown beside this tool's history entries. */
-  logIcon?: string;
+  /** Icon (e.g. a small inline SVG) shown beside this tool's history entries. */
+  logIcon?: ReactNode;
   execute(input: TInput): TResult | Promise<TResult>;
 }
 
@@ -176,8 +178,8 @@ export interface TaskLogEntry {
   id: string;
   /** Human-readable summary of what happened, tokens already interpolated. */
   message: string;
-  /** Icon (usually an emoji) shown beside the entry. */
-  icon?: string | undefined;
+  /** Icon (e.g. a small inline SVG) shown beside the entry. */
+  icon?: ReactNode | undefined;
   status: TaskLogStatus;
   /** Name of the WebMCP tool that produced the entry, when known. */
   toolName?: string | undefined;
@@ -186,8 +188,8 @@ export interface TaskLogEntry {
 }
 
 export interface LogTaskOptions {
-  /** Icon (usually an emoji) shown beside the entry. */
-  icon?: string | undefined;
+  /** Icon (e.g. a small inline SVG) shown beside the entry. */
+  icon?: ReactNode | undefined;
   /** Defaults to "success". */
   status?: TaskLogStatus | undefined;
   /** Name of the tool the entry came from. */
@@ -205,8 +207,8 @@ export interface ModelContextLike {
   ): void | Promise<void>;
 }
 
-export interface WebMCPExperienceApi {
-  snapshot: ExperienceSnapshot;
+export interface RigApi {
+  snapshot: RigSnapshot;
   startWork(message?: string, selector?: string, options?: StartWorkOptions): void;
   /** Update the visible progress message while work is running. */
   progress(message: string): void;
@@ -230,7 +232,7 @@ export interface WebMCPExperienceApi {
   /**
    * Record a completed agent action in the history feed. `%%key%%` tokens
    * in the message are interpolated from `values`, e.g.
-   * logTask("Added %%name%% as a contact", { name: "Bob" }, { icon: "👤" }).
+   * logTask("Added %%name%% as a contact", { name: "Bob" }, { icon: <UserIcon /> }).
    */
   logTask(
     message: string,

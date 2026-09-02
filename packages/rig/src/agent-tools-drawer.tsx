@@ -2,7 +2,7 @@
 
 import { useEffect, useRef } from "react";
 
-import { useOptionalWebMCPExperience } from "./experience-provider";
+import { useOptionalRig } from "./rig-provider";
 import type { ToolInfo } from "./types";
 
 export interface AgentToolsDrawerProps {
@@ -32,6 +32,8 @@ function humanize(name: string): string {
   return words.charAt(0).toUpperCase() + words.slice(1);
 }
 
+const DEFAULT_TITLE = "What agents can do here";
+
 const DEFAULT_DESCRIPTION =
   "This page exposes tools an AI agent can use on your behalf. Actions are shown on the page while they run.";
 
@@ -42,7 +44,7 @@ const DEFAULT_DESCRIPTION =
 export function AgentToolsDrawer({
   open,
   onClose,
-  title,
+  title = DEFAULT_TITLE,
   description = DEFAULT_DESCRIPTION,
   tools,
   side = "right",
@@ -50,7 +52,7 @@ export function AgentToolsDrawer({
   className,
   overlayClassName,
 }: AgentToolsDrawerProps) {
-  const experience = useOptionalWebMCPExperience();
+  const rig = useOptionalRig();
   const closeButtonRef = useRef<HTMLButtonElement>(null);
 
   useEffect(() => {
@@ -65,16 +67,14 @@ export function AgentToolsDrawer({
 
   if (!open) return null;
 
-  const resolvedTools = tools ?? experience?.tools ?? [];
-  const agentLabel = experience?.snapshot.agentLabel;
-  const resolvedTitle = title ?? `What ${agentLabel ?? "agents"} can do here`;
+  const resolvedTools = tools ?? rig?.tools ?? [];
 
-  const backdropClasses = ["webmcp-exp-drawer-backdrop", overlayClassName]
+  const backdropClasses = ["webmcp-rig-drawer-backdrop", overlayClassName]
     .filter(Boolean)
     .join(" ");
   const drawerClasses = [
-    "webmcp-exp-drawer",
-    `webmcp-exp-drawer--${side}`,
+    "webmcp-rig-drawer",
+    `webmcp-rig-drawer--${side}`,
     className,
   ]
     .filter(Boolean)
@@ -86,11 +86,11 @@ export function AgentToolsDrawer({
         className={drawerClasses}
         role="dialog"
         aria-modal="true"
-        aria-labelledby="webmcp-exp-drawer-title"
+        aria-labelledby="webmcp-rig-drawer-title"
         onMouseDown={(event) => event.stopPropagation()}
       >
-        <div className="webmcp-exp-drawer__header">
-          <h2 id="webmcp-exp-drawer-title">{resolvedTitle}</h2>
+        <div className="webmcp-rig-drawer__header">
+          <h2 id="webmcp-rig-drawer-title">{title}</h2>
           <button
             ref={closeButtonRef}
             type="button"
@@ -100,20 +100,20 @@ export function AgentToolsDrawer({
             ×
           </button>
         </div>
-        <p className="webmcp-exp-drawer__description">{description}</p>
-        <div className="webmcp-exp-drawer__list">
+        <p className="webmcp-rig-drawer__description">{description}</p>
+        <div className="webmcp-rig-drawer__list">
           {resolvedTools.length === 0 ? (
-            <p className="webmcp-exp-drawer__empty">No tools are registered on this page.</p>
+            <p className="webmcp-rig-drawer__empty">No tools are registered on this page.</p>
           ) : (
             resolvedTools.map((tool) => (
-              <article className="webmcp-exp-drawer__tool" key={tool.name}>
+              <article className="webmcp-rig-drawer__tool" key={tool.name}>
                 <h3>{humanize(tool.name)}</h3>
                 <p>{tool.description}</p>
                 {tool.example ? (
-                  <div className="webmcp-exp-drawer__example">
-                    <div className="webmcp-exp-drawer__example-inner">
+                  <div className="webmcp-rig-drawer__example">
+                    <div className="webmcp-rig-drawer__example-inner">
                       <small>{exampleLabel}</small>
-                      <span className="webmcp-exp-bubble">{tool.example}</span>
+                      <span className="webmcp-rig-bubble">{tool.example}</span>
                     </div>
                   </div>
                 ) : null}

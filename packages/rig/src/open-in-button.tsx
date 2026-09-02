@@ -4,7 +4,7 @@ import { useEffect, useState, type ButtonHTMLAttributes, type ReactNode } from "
 
 import { detectAgent } from "./agent-detection";
 import { createChatGPTDeeplink, type ChatGPTDeeplinkOptions } from "./deeplink";
-import { useOptionalWebMCPExperience } from "./experience-provider";
+import { useOptionalRig } from "./rig-provider";
 import { OpenAILogo } from "./openai-logo";
 
 export type SupportedAgent = "openai";
@@ -26,6 +26,28 @@ const AGENT_LABELS: Record<SupportedAgent, string> = {
   openai: "ChatGPT",
 };
 
+/* Lucide's ExternalLink icon, inlined so the SDK stays dependency-free. */
+function ExternalLinkIcon() {
+  return (
+    <svg
+      className="webmcp-rig-openin__icon"
+      width="14"
+      height="14"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+    >
+      <path d="M15 3h6v6" />
+      <path d="M10 14 21 3" />
+      <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" />
+    </svg>
+  );
+}
+
 export function OpenInButton({
   agent = "openai",
   children,
@@ -36,19 +58,19 @@ export function OpenInButton({
   type = "button",
   ...buttonProps
 }: OpenInButtonProps) {
-  const experience = useOptionalWebMCPExperience();
+  const rig = useOptionalRig();
   const [standaloneDetected, setStandaloneDetected] = useState(false);
 
   // Outside the provider there is no snapshot to read, so detect directly
   // after mount (detection needs the browser's injected globals).
   useEffect(() => {
-    if (!experience) {
+    if (!rig) {
       setStandaloneDetected(detectAgent().brand !== "unknown");
     }
-  }, [experience]);
+  }, [rig]);
 
-  const insideAgent = experience
-    ? experience.snapshot.agent !== "unknown"
+  const insideAgent = rig
+    ? rig.snapshot.agent !== "unknown"
     : standaloneDetected;
 
   if (hideWhenInsideAgent && insideAgent) return null;
@@ -66,11 +88,11 @@ export function OpenInButton({
     <button {...buttonProps} type={type} onClick={handleClick}>
       {children ?? (
         <>
-          <span className="webmcp-exp-openin__label">
+          <span className="webmcp-rig-openin__label">
             <OpenAILogo />
             Open in {AGENT_LABELS[agent]}
           </span>
-          <span aria-hidden="true">↗</span>
+          <ExternalLinkIcon />
         </>
       )}
     </button>

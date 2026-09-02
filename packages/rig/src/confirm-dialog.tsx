@@ -68,43 +68,43 @@ export function ConfirmDialog({
 
   return (
     <div
-      className="webmcp-exp-backdrop"
+      className="webmcp-rig-backdrop"
       role="presentation"
       onMouseDown={() => onResolve(request, false)}
     >
       <section
-        className={`webmcp-exp-dialog webmcp-exp-confirm webmcp-exp-confirm--${tone}`}
+        className={`webmcp-rig-dialog webmcp-rig-confirm webmcp-rig-confirm--${tone}`}
         role="alertdialog"
         aria-modal="true"
-        aria-labelledby="webmcp-exp-confirm-title"
-        aria-describedby={options.description ? "webmcp-exp-confirm-description" : undefined}
+        aria-labelledby="webmcp-rig-confirm-title"
+        aria-describedby={options.description ? "webmcp-rig-confirm-description" : undefined}
         onMouseDown={(event) => event.stopPropagation()}
         onMouseEnter={() => setPaused(true)}
         onMouseLeave={() => setPaused(false)}
       >
-        <div className="webmcp-exp-confirm__body">
-          <span className="webmcp-exp-confirm__icon" aria-hidden="true">
+        <div className="webmcp-rig-confirm__body">
+          <span className="webmcp-rig-confirm__icon" aria-hidden="true">
             {tone === "destructive" ? "!" : "✓"}
           </span>
           <div>
-            <h2 id="webmcp-exp-confirm-title">{options.title}</h2>
+            <h2 id="webmcp-rig-confirm-title">{options.title}</h2>
             {options.description ? (
-              <p id="webmcp-exp-confirm-description">{options.description}</p>
+              <p id="webmcp-rig-confirm-description">{options.description}</p>
             ) : null}
           </div>
         </div>
-        <div className="webmcp-exp-confirm__footer">
+        <div className="webmcp-rig-confirm__footer">
           <button
             ref={focusRef}
             type="button"
-            className="webmcp-exp-confirm__cancel"
+            className="webmcp-rig-confirm__cancel"
             onClick={() => onResolve(request, false)}
           >
             {options.cancelLabel ?? "Cancel"}
           </button>
           <button
             type="button"
-            className="webmcp-exp-confirm__continue"
+            className="webmcp-rig-confirm__continue"
             onClick={() => onResolve(request, true)}
           >
             {options.confirmLabel ?? "Continue"}
@@ -113,7 +113,7 @@ export function ConfirmDialog({
         </div>
         {autoContinueMs !== null ? (
           <i
-            className={`webmcp-exp-confirm__timer${paused ? " webmcp-exp-confirm__timer--paused" : ""}`}
+            className={`webmcp-rig-confirm__timer${paused ? " webmcp-rig-confirm__timer--paused" : ""}`}
             style={timerStyle}
             aria-hidden="true"
           />

@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, type FormEvent } from "react";
-import { useAutoAnimate } from "@formkit/auto-animate/react";
 
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
@@ -42,8 +41,6 @@ export default function ContactsPage() {
   const [company, setCompany] = useState("");
   const [email, setEmail] = useState("");
   const [status, setStatus] = useState<ContactStatus>("Lead");
-  const [cardRef] = useAutoAnimate<HTMLDivElement>();
-  const [tbodyRef] = useAutoAnimate<HTMLTableSectionElement>();
 
   const visibleContacts = contactFilter
     ? contacts.filter((contact) =>
@@ -73,7 +70,7 @@ export default function ContactsPage() {
     <div className="mx-auto w-full max-w-[1220px] px-7 pt-8 pb-12 max-sm:px-4 max-sm:pt-6">
       <div className="mb-6 flex items-end justify-between gap-5 max-sm:flex-col max-sm:items-start">
         <div>
-          <h1 className="font-heading text-2xl">Contacts</h1>
+          <h1 className="font-heading text-[28px]">Contacts</h1>
           <p className="mt-1 text-sm text-muted-foreground">Everyone your team is talking to.</p>
         </div>
         <Button onClick={() => setShowForm((open) => !open)}>
@@ -81,9 +78,9 @@ export default function ContactsPage() {
         </Button>
       </div>
 
-      <Card id="contacts" ref={cardRef}>
+      <Card id="contacts">
         <CardHeader className="border-b p-4.5">
-          <CardTitle className="text-[15px] font-normal">All contacts</CardTitle>
+          <CardTitle>All contacts</CardTitle>
           <CardDescription className="text-[13px]">
             {contactFilter
               ? `Filtered by “${contactFilter}” — ${visibleContacts.length} of ${contacts.length} shown.`
@@ -164,7 +161,7 @@ export default function ContactsPage() {
               <TableHead className="px-4" />
             </TableRow>
           </TableHeader>
-          <TableBody ref={tbodyRef}>
+          <TableBody>
             {visibleContacts.length === 0 ? (
               <TableRow>
                 <TableCell colSpan={6} className="py-7 text-center text-muted-foreground">
@@ -176,25 +173,25 @@ export default function ContactsPage() {
                 <TableRow key={contact.id}>
                   <TableCell className="px-4 py-3">
                     <span className="flex items-center gap-2.5">
-                      <Avatar className="size-7 border text-[9px] font-semibold">
+                      <Avatar className="size-7 border text-[9px] font-medium">
                         <AvatarFallback>{initials(contact.name)}</AvatarFallback>
                       </Avatar>
                       <span className="leading-tight">
-                        <strong className="block text-xs font-semibold">{contact.name}</strong>
-                        <small className="mt-0.5 block text-[11px] text-muted-foreground">
+                        <strong className="block text-[13px] font-medium">{contact.name}</strong>
+                        <small className="mt-0.5 block text-xs text-muted-foreground">
                           {contact.company}
                         </small>
                       </span>
                     </span>
                   </TableCell>
-                  <TableCell className="px-4 font-mono text-[11px] text-muted-foreground">
+                  <TableCell className="px-4 font-mono text-xs text-muted-foreground">
                     {contact.email}
                   </TableCell>
                   <TableCell className="px-4">
                     <Badge variant={STATUS_BADGE_VARIANT[contact.status]}>{contact.status}</Badge>
                   </TableCell>
-                  <TableCell className="px-4 text-xs">{contact.owner}</TableCell>
-                  <TableCell className="px-4 text-xs">{contact.lastActivity}</TableCell>
+                  <TableCell className="px-4 text-[13px]">{contact.owner}</TableCell>
+                  <TableCell className="px-4 text-[13px]">{contact.lastActivity}</TableCell>
                   <TableCell className="w-px whitespace-nowrap px-4 text-right">
                     <Button
                       variant="ghost"

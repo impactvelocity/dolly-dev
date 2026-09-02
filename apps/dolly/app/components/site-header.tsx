@@ -1,10 +1,9 @@
 "use client";
 
 const NAV = [
-  { href: "#problem", label: "WebMCP" },
-  { href: "#open-in", label: "Primitives" },
-  { href: "#styling", label: "Styling" },
-  { href: "#api", label: "API" },
+  { href: "#problem", label: "Multiplayer" },
+  { href: "#open-in", label: "How it works" },
+  { href: "#screen-tests", label: "Try it" },
 ];
 
 export function SiteHeader() {
@@ -13,7 +12,7 @@ export function SiteHeader() {
       <div className="mx-auto flex max-w-5xl items-center gap-6 rounded-2xl border border-sky-400 bg-sky-50 py-3 pl-5 pr-3 shadow-[0_8px_30px_rgba(19,19,40,0.08)] backdrop-blur-md">
         <a
           href="#top"
-          className="flex items-center gap-2.5 text-lg font-medium tracking-tightX no-underline"
+          className="flex items-center gap-2.5 text-lg font-bold tracking-tightX no-underline"
         >
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img src="/logo.svg" alt="" className="h-[22px] w-[22px]" />

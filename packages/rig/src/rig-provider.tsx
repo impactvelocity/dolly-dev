@@ -23,8 +23,8 @@ import { formatTaskMessage } from "./task-log";
 import type {
   ConfirmOptions,
   ConnectionState,
-  ExperienceCapability,
-  ExperienceSnapshot,
+  RigCapability,
+  RigSnapshot,
   GlowOptions,
   HighlightOptions,
   LogTaskOptions,
@@ -32,11 +32,11 @@ import type {
   StartWorkOptions,
   TaskLogEntry,
   ToolInfo,
-  WebMCPExperienceApi,
-  WebMCPExperienceTheme,
+  RigApi,
+  RigTheme,
 } from "./types";
 
-const INITIAL_SNAPSHOT: ExperienceSnapshot = {
+const INITIAL_SNAPSHOT: RigSnapshot = {
   phase: "idle",
   message: null,
   selector: null,
@@ -47,26 +47,26 @@ const INITIAL_SNAPSHOT: ExperienceSnapshot = {
   overlay: false,
 };
 
-const WebMCPExperienceContext = createContext<WebMCPExperienceApi | null>(null);
+const RigContext = createContext<RigApi | null>(null);
 
 /**
  * When the work toast appears:
  * - "settled" — only after work finishes, to announce what just happened
- *   (progress is expected to show in an AgentStatusHeader / AgentStatusBadge).
+ *   (progress is expected to show in an AgentStatusHeader).
  * - "always" — during work as well as on completion.
  * - "none" — never; the app renders its own progress UI.
  */
 export type WorkToastMode = "settled" | "always" | "none";
 
-export interface WebMCPExperienceProviderProps {
+export interface RigProviderProps {
   appName: string;
-  capabilities: ExperienceCapability[];
+  capabilities: RigCapability[];
   children: ReactNode;
   /**
-   * Light/dark mode, brand color, and subtle tint for every experience
+   * Light/dark mode, brand color, and subtle tint for every rig
    * surface. Applied as CSS custom properties on the document root.
    */
-  theme?: WebMCPExperienceTheme;
+  theme?: RigTheme;
   /** @deprecated Use `theme.brandColor` instead. */
   accentColor?: string;
   connectionParam?: string;
@@ -132,7 +132,7 @@ function contrastColorFor(color: string): string {
   return luminance > 0.6 ? "#18181b" : "#ffffff";
 }
 
-export function WebMCPExperienceProvider({
+export function RigProvider({
   appName,
   capabilities,
   children,
@@ -147,8 +147,8 @@ export function WebMCPExperienceProvider({
   onboarding,
   highlight,
   historyLimit = 50,
-}: WebMCPExperienceProviderProps) {
-  const [snapshot, setSnapshot] = useState<ExperienceSnapshot>(INITIAL_SNAPSHOT);
+}: RigProviderProps) {
+  const [snapshot, setSnapshot] = useState<RigSnapshot>(INITIAL_SNAPSHOT);
   const [onboardingOpen, setOnboardingOpen] = useState(false);
   const resetTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const focusedElementRef = useRef<HTMLElement | null>(null);
@@ -163,7 +163,7 @@ export function WebMCPExperienceProvider({
   const clearFocus = useCallback(() => {
     const element = focusedElementRef.current;
     if (element) {
-      delete element.dataset.webmcpExperienceFocus;
+      delete element.dataset.webmcpRigFocus;
       focusedElementRef.current = null;
     }
     setSnapshot((current) => ({ ...current, selector: null }));
@@ -181,11 +181,11 @@ export function WebMCPExperienceProvider({
 
     const previousElement = focusedElementRef.current;
     if (previousElement && previousElement !== element) {
-      delete previousElement.dataset.webmcpExperienceFocus;
+      delete previousElement.dataset.webmcpRigFocus;
     }
 
     focusedElementRef.current = element;
-    element.dataset.webmcpExperienceFocus = "true";
+    element.dataset.webmcpRigFocus = "true";
     const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
     element.scrollIntoView({
       behavior: reduceMotion ? "auto" : "smooth",
@@ -223,7 +223,7 @@ export function WebMCPExperienceProvider({
     setSnapshot((current) => ({ ...current, phase, message }));
     resetTimerRef.current = setTimeout(() => {
       const element = focusedElementRef.current;
-      if (element) delete element.dataset.webmcpExperienceFocus;
+      if (element) delete element.dataset.webmcpRigFocus;
       focusedElementRef.current = null;
       setSnapshot((current) => ({
         ...current,
@@ -351,20 +351,20 @@ export function WebMCPExperienceProvider({
     const root = document.documentElement;
     const assignments: Array<[name: string, value: string]> = [];
     if (brandColor !== undefined) {
-      // The stylesheet derives --webmcp-exp-brand (and the default subtle
+      // The stylesheet derives --webmcp-rig-brand (and the default subtle
       // tint) from the accent variable, so one property themes everything.
-      assignments.push(["--webmcp-exp-accent", brandColor]);
-      assignments.push(["--webmcp-exp-brand-contrast", contrastColorFor(brandColor)]);
+      assignments.push(["--webmcp-rig-accent", brandColor]);
+      assignments.push(["--webmcp-rig-brand-contrast", contrastColorFor(brandColor)]);
     }
     if (subtleColor !== undefined) {
-      assignments.push(["--webmcp-exp-subtle", subtleColor]);
+      assignments.push(["--webmcp-rig-subtle", subtleColor]);
     }
 
     const previousValues = assignments.map(([name]) => root.style.getPropertyValue(name));
     for (const [name, value] of assignments) root.style.setProperty(name, value);
 
-    const previousMode = root.getAttribute("data-webmcp-exp-mode");
-    if (mode) root.setAttribute("data-webmcp-exp-mode", mode);
+    const previousMode = root.getAttribute("data-webmcp-rig-mode");
+    if (mode) root.setAttribute("data-webmcp-rig-mode", mode);
 
     return () => {
       assignments.forEach(([name], index) => {
@@ -373,8 +373,8 @@ export function WebMCPExperienceProvider({
         else root.style.removeProperty(name);
       });
       if (mode) {
-        if (previousMode) root.setAttribute("data-webmcp-exp-mode", previousMode);
-        else root.removeAttribute("data-webmcp-exp-mode");
+        if (previousMode) root.setAttribute("data-webmcp-rig-mode", previousMode);
+        else root.removeAttribute("data-webmcp-rig-mode");
       }
     };
   }, [brandColor, subtleColor, mode]);
@@ -382,9 +382,9 @@ export function WebMCPExperienceProvider({
   useEffect(() => {
     const root = document.documentElement;
     if (highlight?.color) {
-      root.style.setProperty("--webmcp-exp-highlight", highlight.color);
+      root.style.setProperty("--webmcp-rig-highlight", highlight.color);
       return () => {
-        root.style.removeProperty("--webmcp-exp-highlight");
+        root.style.removeProperty("--webmcp-rig-highlight");
       };
     }
     return undefined;
@@ -393,10 +393,10 @@ export function WebMCPExperienceProvider({
   useEffect(() => () => {
     clearResetTimer();
     const element = focusedElementRef.current;
-    if (element) delete element.dataset.webmcpExperienceFocus;
+    if (element) delete element.dataset.webmcpRigFocus;
   }, [clearResetTimer]);
 
-  const api = useMemo<WebMCPExperienceApi>(() => ({
+  const api = useMemo<RigApi>(() => ({
     snapshot,
     startWork,
     progress,
@@ -415,13 +415,13 @@ export function WebMCPExperienceProvider({
   }), [clearFocus, clearHistory, closeOnboarding, confirm, endWork, failWork, focus, history, logTask, openOnboarding, progress, registerToolInfo, snapshot, startWork, tools]);
 
   const style = (
-    brandColor !== undefined ? { "--webmcp-exp-accent": brandColor } : {}
+    brandColor !== undefined ? { "--webmcp-rig-accent": brandColor } : {}
   ) as CSSProperties;
 
   return (
-    <WebMCPExperienceContext value={api}>
+    <RigContext value={api}>
       {children}
-      <div className="webmcp-exp-root" style={style}>
+      <div className="webmcp-rig-root" style={style}>
         {highlight?.showOverlay ? (
           <FocusSpotlight selector={snapshot.selector} options={highlight} />
         ) : null}
@@ -436,15 +436,13 @@ export function WebMCPExperienceProvider({
         ) : null}
         {onboardingOpen ? (
           <OnboardingDialog
-            appName={appName}
             capabilities={capabilities}
-            connected={snapshot.connection === "connected"}
             onClose={closeOnboarding}
             options={onboarding}
           />
         ) : null}
       </div>
-    </WebMCPExperienceContext>
+    </RigContext>
   );
 }
 
@@ -517,7 +515,7 @@ function FocusSpotlight({
   };
 
   return (
-    <div className="webmcp-exp-spotlight" aria-hidden="true">
+    <div className="webmcp-rig-spotlight" aria-hidden="true">
       <i style={{ ...paneStyle, top: 0, left: 0, right: 0, height: rect.top }} />
       <i style={{ ...paneStyle, top: rect.bottom, left: 0, right: 0, bottom: 0 }} />
       <i style={{ ...paneStyle, top: rect.top, left: 0, width: rect.left, height: rect.bottom - rect.top }} />
@@ -531,7 +529,7 @@ function FocusSpotlight({
         }}
       />
       <i
-        className="webmcp-exp-spotlight__ring"
+        className="webmcp-rig-spotlight__ring"
         style={{
           top: rect.top,
           left: rect.left,
@@ -547,29 +545,29 @@ function GlowOverlay({
   snapshot,
   options,
 }: {
-  snapshot: ExperienceSnapshot;
+  snapshot: RigSnapshot;
   options?: GlowOptions | undefined;
 }) {
   if (!snapshot.overlay || snapshot.phase === "idle") return null;
 
   const style: CSSProperties = {
     ...(options?.colors?.length
-      ? { "--webmcp-exp-glow-gradient": `linear-gradient(115deg, ${options.colors.join(", ")})` }
+      ? { "--webmcp-rig-glow-gradient": `linear-gradient(115deg, ${options.colors.join(", ")})` }
       : {}),
-    ...(options?.ringColor ? { "--webmcp-exp-glow-border": options.ringColor } : {}),
+    ...(options?.ringColor ? { "--webmcp-rig-glow-border": options.ringColor } : {}),
     ...(options?.opacity !== undefined
-      ? { "--webmcp-exp-glow-opacity": String(options.opacity) }
+      ? { "--webmcp-rig-glow-opacity": String(options.opacity) }
       : {}),
   } as CSSProperties;
 
   const active = snapshot.phase === "working";
   return (
     <div
-      className={`webmcp-exp-glow${active ? " webmcp-exp-glow--active" : ""}`}
+      className={`webmcp-rig-glow${active ? " webmcp-rig-glow--active" : ""}`}
       style={style}
       aria-hidden="true"
     >
-      <div className="webmcp-exp-glow__layer" />
+      <div className="webmcp-rig-glow__layer" />
     </div>
   );
 }
@@ -579,7 +577,7 @@ function WorkIndicator({
   mode,
   className,
 }: {
-  snapshot: ExperienceSnapshot;
+  snapshot: RigSnapshot;
   mode: WorkToastMode;
   className?: string | undefined;
 }) {
@@ -588,8 +586,8 @@ function WorkIndicator({
   if (mode === "settled" && snapshot.phase === "working") return null;
 
   const classes = [
-    "webmcp-exp-work",
-    `webmcp-exp-work--${snapshot.phase}`,
+    "webmcp-rig-work",
+    `webmcp-rig-work--${snapshot.phase}`,
     className,
   ]
     .filter(Boolean)
@@ -597,24 +595,39 @@ function WorkIndicator({
 
   return (
     <div className={classes} role="status" aria-live="polite">
-      <span className="webmcp-exp-work__icon" aria-hidden="true">
-        {snapshot.phase === "working" ? <i /> : snapshot.phase === "success" ? "✓" : "!"}
+      <span className="webmcp-rig-work__icon" aria-hidden="true">
+        {snapshot.phase === "working" ? <i /> : snapshot.phase === "success" ? <CheckIcon /> : "!"}
       </span>
       <span>{snapshot.message}</span>
     </div>
   );
 }
 
+/** Lucide `check` icon, inlined to keep the package dependency-free. */
+function CheckIcon() {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      width="13"
+      height="13"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="3"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+    >
+      <path d="M20 6 9 17l-5-5" />
+    </svg>
+  );
+}
+
 function OnboardingDialog({
-  appName,
   capabilities,
-  connected,
   onClose,
   options,
 }: {
-  appName: string;
-  capabilities: ExperienceCapability[];
-  connected: boolean;
+  capabilities: RigCapability[];
   onClose(): void;
   options?: OnboardingOptions | undefined;
 }) {
@@ -630,10 +643,17 @@ function OnboardingDialog({
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [onClose]);
 
-  const steps = options?.steps;
-  const hasSteps = steps !== undefined && steps.length > 0;
-  const step = hasSteps ? steps[Math.min(stepIndex, steps.length - 1)]! : null;
-  const isLastStep = hasSteps && stepIndex >= steps.length - 1;
+  // One onboarding flow: an explicit step walkthrough when provided,
+  // otherwise the capabilities become the steps.
+  const steps: NonNullable<OnboardingOptions["steps"]> =
+    options?.steps !== undefined && options.steps.length > 0
+      ? options.steps
+      : capabilities.map((capability) => ({
+          title: capability.title,
+          description: capability.description,
+        }));
+  const step = steps[Math.min(stepIndex, steps.length - 1)];
+  const isLastStep = stepIndex >= steps.length - 1;
 
   const backdropStyle: CSSProperties = {};
   if (options?.overlayColor !== undefined || options?.overlayOpacity !== undefined) {
@@ -642,21 +662,19 @@ function OnboardingDialog({
     backdropStyle.backgroundColor = `color-mix(in srgb, ${color} ${opacity * 100}%, transparent)`;
   }
 
-  const backdropClasses = ["webmcp-exp-backdrop", options?.overlayClassName]
+  const backdropClasses = ["webmcp-rig-backdrop", options?.overlayClassName]
     .filter(Boolean)
     .join(" ");
-  const dialogClasses = [
-    "webmcp-exp-dialog",
-    hasSteps ? "webmcp-exp-dialog--steps" : null,
-    options?.className,
-  ]
+  const dialogClasses = ["webmcp-rig-dialog", "webmcp-rig-dialog--steps", options?.className]
     .filter(Boolean)
     .join(" ");
 
   const advance = () => {
-    if (isLastStep || !hasSteps) onClose();
+    if (isLastStep) onClose();
     else setStepIndex((index) => index + 1);
   };
+
+  if (!step) return null;
 
   return (
     <div className={backdropClasses} style={backdropStyle} role="presentation" onMouseDown={onClose}>
@@ -664,79 +682,53 @@ function OnboardingDialog({
         className={dialogClasses}
         role="dialog"
         aria-modal="true"
-        aria-labelledby="webmcp-exp-title"
+        aria-labelledby="webmcp-rig-title"
         onMouseDown={(event) => event.stopPropagation()}
       >
-        {hasSteps && step ? (
-          <>
-            <button
-              ref={closeButtonRef}
-              type="button"
-              className="webmcp-exp-dialog__close"
-              onClick={onClose}
-              aria-label="Close onboarding"
-            >
-              ×
-            </button>
-            {step.image ? (
-              <img
-                className="webmcp-exp-dialog__image"
-                src={step.image}
-                alt={step.imageAlt ?? ""}
-              />
-            ) : null}
-            <div className="webmcp-exp-step">
-              <h2 id="webmcp-exp-title">{step.title}</h2>
-              <p>{step.description}</p>
-            </div>
-            <div className="webmcp-exp-dialog__stepfooter">
-              <div className="webmcp-exp-segments" aria-label={`Step ${stepIndex + 1} of ${steps.length}`}>
-                {steps.map((entry, index) => (
-                  <i key={entry.title} className={index <= stepIndex ? "active" : undefined} />
-                ))}
-              </div>
-              <button type="button" className="webmcp-exp-dialog__next" onClick={advance}>
-                {isLastStep ? options?.doneLabel ?? "Got it" : options?.nextLabel ?? "Next"}
-              </button>
-            </div>
-          </>
-        ) : (
-          <>
-            <div className="webmcp-exp-dialog__header">
-              <div>
-                <h2 id="webmcp-exp-title">Use ChatGPT with {appName}</h2>
-                <p>{connected ? "ChatGPT can use the tools below on this page." : "WebMCP tools are available on this page."}</p>
-              </div>
-              <button ref={closeButtonRef} type="button" onClick={onClose} aria-label="Close onboarding">×</button>
-            </div>
-            <div className="webmcp-exp-capabilities">
-              {capabilities.map((capability) => (
-                <article key={capability.title}>
-                  <span aria-hidden="true">✓</span>
-                  <div><h3>{capability.title}</h3><p>{capability.description}</p></div>
-                </article>
-              ))}
-            </div>
-            <div className="webmcp-exp-dialog__footer">
-              <p>Actions will be shown while they run.</p>
-              <button type="button" onClick={onClose}>Got it</button>
-            </div>
-          </>
-        )}
+        <button
+          ref={closeButtonRef}
+          type="button"
+          className="webmcp-rig-dialog__close"
+          onClick={onClose}
+          aria-label="Close onboarding"
+        >
+          ×
+        </button>
+        {step.image ? (
+          <img
+            className="webmcp-rig-dialog__image"
+            src={step.image}
+            alt={step.imageAlt ?? ""}
+          />
+        ) : null}
+        <div className="webmcp-rig-step">
+          <h2 id="webmcp-rig-title">{step.title}</h2>
+          <p>{step.description}</p>
+        </div>
+        <div className="webmcp-rig-dialog__stepfooter">
+          <div className="webmcp-rig-segments" aria-label={`Step ${stepIndex + 1} of ${steps.length}`}>
+            {steps.map((entry, index) => (
+              <i key={entry.title} className={index <= stepIndex ? "active" : undefined} />
+            ))}
+          </div>
+          <button type="button" className="webmcp-rig-dialog__next" onClick={advance}>
+            {isLastStep ? options?.doneLabel ?? "Got it" : options?.nextLabel ?? "Next"}
+          </button>
+        </div>
       </section>
     </div>
   );
 }
 
-export function useWebMCPExperience(): WebMCPExperienceApi {
-  const context = useContext(WebMCPExperienceContext);
+export function useRig(): RigApi {
+  const context = useContext(RigContext);
   if (!context) {
-    throw new Error("useWebMCPExperience must be used inside WebMCPExperienceProvider");
+    throw new Error("useRig must be used inside RigProvider");
   }
   return context;
 }
 
-/** Like useWebMCPExperience, but returns null outside the provider. */
-export function useOptionalWebMCPExperience(): WebMCPExperienceApi | null {
-  return useContext(WebMCPExperienceContext);
+/** Like useRig, but returns null outside the provider. */
+export function useOptionalRig(): RigApi | null {
+  return useContext(RigContext);
 }

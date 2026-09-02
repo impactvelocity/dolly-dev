@@ -1,17 +1,28 @@
-# WebMCP Experience SDK
+# Dolly.dev
 
-A React-first experience layer for WebMCP. It helps people understand when a
+`@dolly/rig` is a React-first rig for WebMCP — a nod to the camera. It helps
+people understand when a
 browser agent is available, what it can do, what it is currently doing, and
 which part of the interface it is acting on.
 
 This repository is a local proof of concept for the OpenAI WebMCP Challenge.
 
+**Try it live:**
+
+- [dolly.dev](https://dolly.dev) — the SDK marketing site
+- [dollycrm.app](https://dollycrm.app) — the demo CRM, a mock app built with
+  the rig so you can test the WebMCP experience end to end
+
+> **Note:** The SDK lives in `packages/rig` inside this workspace — it is not
+> published to npm yet. This project is exploring what best practices (or at
+> least good ideas) could look like for surfacing WebMCP actions in
+> multiplayer, where a person and a browser agent share the same interface.
+
 ## Workspace
 
-- `packages/experience` — the single shared React package
+- `packages/rig` — `@dolly/rig`, the single shared React package
 - `apps/dolly` — dolly.dev, the film-styled SDK marketing site on port 3002
-- `apps/showcase` — editorial SDK example on port 3000
-- `apps/console` — mock CRM example on port 3001
+- `apps/console` — dollycrm.app, the mock CRM example on port 3001
 - `packages/typescript-config` — workspace-only TypeScript configuration
 
 ## Run it
@@ -21,8 +32,9 @@ pnpm install
 pnpm dev
 ```
 
-Then open `http://localhost:3000` or `http://localhost:3001`. To preview the
-ChatGPT handshake and onboarding locally, append `?webmcpconnected=true`.
+Then open `http://localhost:3001` for the CRM or `http://localhost:3002` for
+the marketing site. To preview the ChatGPT handshake and onboarding locally,
+append `?webmcpconnected=true`.
 
 ## Package setup
 
@@ -30,10 +42,10 @@ Import the package and its stylesheet once near the root of a React app:
 
 ```tsx
 import {
-  WebMCPExperienceProvider,
+  RigProvider,
   OpenInButton,
-} from "@webmcp-sdk/experience";
-import "@webmcp-sdk/experience/styles.css";
+} from "@dolly/rig";
+import "@dolly/rig/styles.css";
 
 const capabilities = [
   {
@@ -48,13 +60,13 @@ const capabilities = [
 
 export function App({ children }: { children: React.ReactNode }) {
   return (
-    <WebMCPExperienceProvider
+    <RigProvider
       appName="Example Store"
       capabilities={capabilities}
     >
       <OpenInButton agent="openai" />
       {children}
-    </WebMCPExperienceProvider>
+    </RigProvider>
   );
 }
 ```
@@ -66,12 +78,12 @@ The application author controls the visible lifecycle from the tool's
 
 ```tsx
 import {
-  useWebMCPExperience,
+  useRig,
   useWebMCPTool,
-} from "@webmcp-sdk/experience";
+} from "@dolly/rig";
 
 export function CartTools() {
-  const experience = useWebMCPExperience();
+  const rig = useRig();
 
   useWebMCPTool({
     name: "add_to_cart",
@@ -82,15 +94,15 @@ export function CartTools() {
       required: ["productId"],
     },
     async execute({ productId }: { productId: string }) {
-      experience.startWork("Adding the product…");
-      experience.focus("#cart", "Updating your cart…");
+      rig.startWork("Adding the product…");
+      rig.focus("#cart", "Updating your cart…");
 
       try {
         await addToCart(productId);
-        experience.endWork("Product added to the cart");
+        rig.endWork("Product added to the cart");
         return { content: [{ type: "text", text: "Added to cart" }] };
       } catch (error) {
-        experience.failWork("The cart could not be updated");
+        rig.failWork("The cart could not be updated");
         throw error;
       }
     },

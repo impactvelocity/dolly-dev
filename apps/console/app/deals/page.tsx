@@ -1,7 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState, type FormEvent } from "react";
-import { createPortal } from "react-dom";
+import { useState, type FormEvent } from "react";
 import {
   DndContext,
   DragOverlay,
@@ -14,7 +13,6 @@ import {
   type DragStartEvent,
 } from "@dnd-kit/core";
 import { XIcon } from "lucide-react";
-import { useAutoAnimate } from "@formkit/auto-animate/react";
 
 import { Button } from "@/components/ui/button";
 import { Card, CardPanel } from "@/components/ui/card";
@@ -30,14 +28,13 @@ import {
 
 import { DEAL_STAGES, formatCurrency, type Deal, type DealStage } from "../crm-data";
 import { useCrm } from "../crm-store";
-import { dndAwareCardAnimation, setDndInFlight } from "./card-animation";
 
 function DealCardBody({ deal }: { deal: Deal }) {
   return (
     <>
-      <strong className="text-xs font-semibold">{deal.name}</strong>
-      <small className="mt-0.5 text-[11px] text-muted-foreground">{deal.company}</small>
-      <b className="mt-2 font-mono text-[11px] font-semibold">{formatCurrency(deal.value)}</b>
+      <strong className="text-[13px] font-medium">{deal.name}</strong>
+      <small className="mt-0.5 text-xs text-muted-foreground">{deal.company}</small>
+      <b className="mt-2 font-mono text-xs font-medium">{formatCurrency(deal.value)}</b>
     </>
   );
 }
@@ -49,7 +46,7 @@ function DealCard({ deal, onRemove }: { deal: Deal; onRemove: (id: string) => vo
     <Card
       render={<article />}
       ref={setNodeRef}
-      className={`group flex cursor-grab touch-none flex-col rounded-xl px-3.5 py-3 transition-shadow before:rounded-[calc(var(--radius-xl)-1px)] hover:shadow-sm focus-visible:outline-2 focus-visible:outline-ring${
+      className={`group flex cursor-grab touch-none flex-col rounded-xl px-3.5 py-3 focus-visible:outline-2 focus-visible:outline-ring${
         isDragging ? " opacity-35" : ""
       }`}
       {...attributes}
@@ -79,7 +76,6 @@ function PipelineColumn({
   onRemove: (id: string) => void;
 }) {
   const { setNodeRef, isOver } = useDroppable({ id: stage });
-  const [listRef] = useAutoAnimate<HTMLDivElement>(dndAwareCardAnimation);
   const stageValue = deals.reduce((sum, deal) => sum + deal.value, 0);
 
   return (
@@ -89,15 +85,15 @@ function PipelineColumn({
         isOver ? " bg-muted" : ""
       }`}
     >
-      <div className="flex items-baseline justify-between gap-2 px-1 pb-1.5 text-xs font-semibold">
+      <div className="flex items-baseline justify-between gap-2 px-1 pb-1.5 text-[13px] font-medium">
         <span>{stage}</span>
-        <small className="text-[10px] font-medium text-muted-foreground">
+        <small className="text-[11px] font-medium text-muted-foreground">
           {deals.length} · {formatCurrency(stageValue)}
         </small>
       </div>
-      <div className="flex min-h-11 flex-col gap-2" ref={listRef}>
+      <div className="flex min-h-11 flex-col gap-2">
         {deals.length === 0 ? (
-          <p className="rounded-lg border border-dashed p-4 text-center text-[11px] text-muted-foreground">
+          <p className="rounded-lg border border-dashed p-4 text-center text-xs text-muted-foreground">
             No deals
           </p>
         ) : (
@@ -116,15 +112,6 @@ export default function DealsPage() {
   const [value, setValue] = useState("");
   const [stage, setStage] = useState<DealStage>("Qualified");
   const [activeDeal, setActiveDeal] = useState<Deal | null>(null);
-  const dragSettleRef = useRef<number | null>(null);
-  const [contentRef] = useAutoAnimate<HTMLDivElement>();
-
-  useEffect(() => {
-    return () => {
-      if (dragSettleRef.current !== null) window.clearTimeout(dragSettleRef.current);
-      setDndInFlight(false);
-    };
-  }, []);
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 6 } }),
@@ -151,22 +138,11 @@ export default function DealsPage() {
   };
 
   const handleDragStart = (event: DragStartEvent) => {
-    if (dragSettleRef.current !== null) {
-      window.clearTimeout(dragSettleRef.current);
-      dragSettleRef.current = null;
-    }
-    setDndInFlight(true);
     setActiveDeal(deals.find((deal) => deal.id === event.active.id) ?? null);
   };
 
   const endDrag = () => {
     setActiveDeal(null);
-    // Keep instant animations through the drop's DOM mutations, then hand
-    // add/remove animations back to auto-animate.
-    dragSettleRef.current = window.setTimeout(() => {
-      dragSettleRef.current = null;
-      setDndInFlight(false);
-    }, 200);
   };
 
   const handleDragEnd = (event: DragEndEvent) => {
@@ -178,13 +154,10 @@ export default function DealsPage() {
   };
 
   return (
-    <div
-      className="mx-auto w-full max-w-[1220px] px-7 pt-8 pb-12 max-sm:px-4 max-sm:pt-6"
-      ref={contentRef}
-    >
+    <div className="mx-auto w-full max-w-[1220px] px-7 pt-8 pb-12 max-sm:px-4 max-sm:pt-6">
       <div className="mb-6 flex items-end justify-between gap-5 max-sm:flex-col max-sm:items-start">
         <div>
-          <h1 className="font-heading text-2xl">Deals</h1>
+          <h1 className="font-heading text-[28px]">Deals</h1>
           <p className="mt-1 text-sm text-muted-foreground">
             {formatCurrency(openValue)} open across {openDeals.length} active deals.
           </p>
@@ -278,24 +251,16 @@ export default function DealsPage() {
             />
           ))}
         </section>
-        {/* Portal the overlay out of the auto-animated page container, which
-            would otherwise treat it as a list item and animate/transform it
-            while dnd-kit is positioning it. */}
-        {typeof document !== "undefined"
-          ? createPortal(
-              <DragOverlay>
-                {activeDeal ? (
-                  <Card
-                    render={<article />}
-                    className="flex cursor-grabbing flex-col rounded-xl px-3.5 py-3 shadow-lg before:rounded-[calc(var(--radius-xl)-1px)]"
-                  >
-                    <DealCardBody deal={activeDeal} />
-                  </Card>
-                ) : null}
-              </DragOverlay>,
-              document.body,
-            )
-          : null}
+        <DragOverlay>
+          {activeDeal ? (
+            <Card
+              render={<article />}
+              className="flex cursor-grabbing flex-col rounded-xl px-3.5 py-3 shadow-lg"
+            >
+              <DealCardBody deal={activeDeal} />
+            </Card>
+          ) : null}
+        </DragOverlay>
       </DndContext>
     </div>
   );

@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 
-import { useOptionalWebMCPExperience } from "./experience-provider";
+import { useOptionalRig } from "./rig-provider";
 import type { TaskLogEntry } from "./types";
 
 export interface AgentHistoryDrawerProps {
@@ -34,6 +34,25 @@ export interface AgentHistoryDrawerProps {
   overlayClassName?: string;
 }
 
+/** Lucide `check` icon, inlined to keep the package dependency-free. */
+function EntryCheckIcon() {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      width="12"
+      height="12"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2.2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+    >
+      <path d="M20 6 9 17l-5-5" />
+    </svg>
+  );
+}
+
 function relativeTime(timestamp: number, now: number): string {
   const seconds = Math.round((now - timestamp) / 1000);
   if (seconds < 60) return "Just now";
@@ -43,6 +62,8 @@ function relativeTime(timestamp: number, now: number): string {
   if (hours < 24) return `${hours}h ago`;
   return new Date(timestamp).toLocaleDateString();
 }
+
+const DEFAULT_TITLE = "What agents did here";
 
 const DEFAULT_DESCRIPTION =
   "Actions an AI agent has taken on this page on your behalf.";
@@ -54,7 +75,7 @@ const DEFAULT_DESCRIPTION =
 export function AgentHistoryDrawer({
   open,
   onClose,
-  title,
+  title = DEFAULT_TITLE,
   description = DEFAULT_DESCRIPTION,
   entries,
   side = "right",
@@ -64,7 +85,7 @@ export function AgentHistoryDrawer({
   className,
   overlayClassName,
 }: AgentHistoryDrawerProps) {
-  const experience = useOptionalWebMCPExperience();
+  const rig = useOptionalRig();
   const closeButtonRef = useRef<HTMLButtonElement>(null);
   const [now, setNow] = useState(() => Date.now());
 
@@ -87,18 +108,16 @@ export function AgentHistoryDrawer({
   if (!open) return null;
 
   const usingProviderHistory = entries === undefined;
-  const resolvedEntries = entries ?? experience?.history ?? [];
-  const agentLabel = experience?.snapshot.agentLabel;
-  const resolvedTitle = title ?? `What ${agentLabel ?? "agents"} did here`;
+  const resolvedEntries = entries ?? rig?.history ?? [];
   const canClear =
-    showClear && usingProviderHistory && experience !== null && resolvedEntries.length > 0;
+    showClear && usingProviderHistory && rig !== null && resolvedEntries.length > 0;
 
-  const backdropClasses = ["webmcp-exp-drawer-backdrop", overlayClassName]
+  const backdropClasses = ["webmcp-rig-drawer-backdrop", overlayClassName]
     .filter(Boolean)
     .join(" ");
   const drawerClasses = [
-    "webmcp-exp-drawer",
-    `webmcp-exp-drawer--${side}`,
+    "webmcp-rig-drawer",
+    `webmcp-rig-drawer--${side}`,
     className,
   ]
     .filter(Boolean)
@@ -110,11 +129,11 @@ export function AgentHistoryDrawer({
         className={drawerClasses}
         role="dialog"
         aria-modal="true"
-        aria-labelledby="webmcp-exp-history-title"
+        aria-labelledby="webmcp-rig-history-title"
         onMouseDown={(event) => event.stopPropagation()}
       >
-        <div className="webmcp-exp-drawer__header">
-          <h2 id="webmcp-exp-history-title">{resolvedTitle}</h2>
+        <div className="webmcp-rig-drawer__header">
+          <h2 id="webmcp-rig-history-title">{title}</h2>
           <button
             ref={closeButtonRef}
             type="button"
@@ -124,18 +143,18 @@ export function AgentHistoryDrawer({
             ×
           </button>
         </div>
-        <p className="webmcp-exp-drawer__description">{description}</p>
-        <div className="webmcp-exp-drawer__list">
+        <p className="webmcp-rig-drawer__description">{description}</p>
+        <div className="webmcp-rig-drawer__list">
           {resolvedEntries.length === 0 ? (
-            <p className="webmcp-exp-drawer__empty">{emptyMessage}</p>
+            <p className="webmcp-rig-drawer__empty">{emptyMessage}</p>
           ) : (
             resolvedEntries.map((entry) => (
               <article
-                className={`webmcp-exp-drawer__entry${entry.status === "error" ? " webmcp-exp-drawer__entry--error" : ""}`}
+                className={`webmcp-rig-drawer__entry${entry.status === "error" ? " webmcp-rig-drawer__entry--error" : ""}`}
                 key={entry.id}
               >
-                <span className="webmcp-exp-drawer__entry-icon" aria-hidden="true">
-                  {entry.icon ?? (entry.status === "error" ? "!" : "✓")}
+                <span className="webmcp-rig-drawer__entry-icon" aria-hidden="true">
+                  {entry.icon ?? (entry.status === "error" ? "!" : <EntryCheckIcon />)}
                 </span>
                 <p>
                   {entry.message}
@@ -149,8 +168,8 @@ export function AgentHistoryDrawer({
           )}
         </div>
         {canClear ? (
-          <div className="webmcp-exp-drawer__footer">
-            <button type="button" onClick={() => experience.clearHistory()}>
+          <div className="webmcp-rig-drawer__footer">
+            <button type="button" onClick={() => rig.clearHistory()}>
               {clearLabel}
             </button>
           </div>

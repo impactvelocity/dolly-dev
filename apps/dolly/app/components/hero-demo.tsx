@@ -11,15 +11,15 @@ type Mode = "current" | "new" | "onboarding";
  * the moment of arrival, held so it can be read.
  */
 const STEPS = [
-  { id: "idle", ms: 1200 }, // connected, nothing running yet
-  { id: "typing", ms: 2600 }, // prompt types into the input
-  { id: "send", ms: 700 }, // send button spins
-  { id: "user", ms: 1200 }, // user message lands in the thread
-  { id: "think", ms: 1300 }, // assistant thinking
-  { id: "tool1", ms: 1800 }, // add_contact running
-  { id: "contact", ms: 1700 }, // contact row lands
-  { id: "tool2", ms: 1800 }, // create_deal running
-  { id: "deal", ms: 1700 }, // deal row lands
+  { id: "idle", ms: 150 }, // connected, nothing running yet
+  { id: "typing", ms: 1400 }, // prompt types into the input
+  { id: "send", ms: 450 }, // send button spins
+  { id: "user", ms: 700 }, // user message lands in the thread
+  { id: "think", ms: 800 }, // assistant thinking
+  { id: "tool1", ms: 1000 }, // add_contact running
+  { id: "contact", ms: 1000 }, // contact row lands
+  { id: "tool2", ms: 1000 }, // create_deal running
+  { id: "deal", ms: 1000 }, // deal row lands
   { id: "reply", ms: 3000 }, // assistant reply + success toast
   { id: "hold", ms: 3200 }, // hold on the finished state, then loop
 ] as const;
@@ -49,12 +49,54 @@ function Spinner({ dark = false }: { dark?: boolean }) {
   );
 }
 
+// Lucide "check", inlined like the other marks in this file.
+function CheckIcon({ size = 12 }: { size?: number }) {
+  return (
+    <svg
+      width={size}
+      height={size}
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="3"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+      className="shrink-0"
+    >
+      <path d="M20 6 9 17l-5-5" />
+    </svg>
+  );
+}
+
 function ToolChip({ name, state }: { name: string; state: "running" | "done" }) {
   return (
     <span className="demo-pop mono inline-flex items-center gap-2 rounded-full border border-zinc-300 bg-zinc-50 px-2.5 py-1 text-[10px] text-zinc-600">
-      {state === "running" ? <Spinner /> : <span className="text-emerald-600">✓</span>}
+      {state === "running" ? <Spinner /> : <span className="text-emerald-600"><CheckIcon size={11} /></span>}
       {name}
     </span>
+  );
+}
+
+const ALERT_TONES = {
+  orange: "bg-orange-50 text-orange-800",
+  emerald: "bg-emerald-50 text-emerald-800",
+  teal: "bg-teal-50 text-teal-800",
+} as const;
+
+function DemoAlert({
+  tone,
+  className = "",
+  children,
+}: {
+  tone: keyof typeof ALERT_TONES;
+  className?: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <div className={`demo-pop self-start rounded-2xl rounded-bl-md px-3.5 py-2 text-[12.5px] font-medium leading-5 tracking-wide ${ALERT_TONES[tone]} ${className}`}>
+      {children}
+    </div>
   );
 }
 
@@ -75,7 +117,7 @@ function ChatMock({ step, mode }: { step: number; mode: Mode }) {
       setTypedCount(0);
       return;
     }
-    const perChar = 2300 / USER_PROMPT.length;
+    const perChar = 1250 / USER_PROMPT.length;
     const interval = setInterval(() => {
       setTypedCount((current) => {
         if (current >= USER_PROMPT.length) {
@@ -102,7 +144,7 @@ function ChatMock({ step, mode }: { step: number; mode: Mode }) {
           {/*<svg className="mt-px" width="10" height="10" viewBox="0 0 10 10" fill="none" aria-hidden="true"><path d="M2 3.5 5 6.5 8 3.5" stroke="#a1a1aa" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" /></svg>*/}
         </span>
         {/*<span className="flex items-center gap-1.5 rounded-full border border-zinc-300 px-2 py-0.5 text-[10px] font-medium text-zinc-500">
-          <span className="size-1.5 rounded-full bg-emerald-500" /> Northwind CRM
+          <span className="size-1.5 rounded-full bg-emerald-500" /> Dolly CRM
         </span>*/}
       </div>
 
@@ -110,11 +152,14 @@ function ChatMock({ step, mode }: { step: number; mode: Mode }) {
         {onboarding ? (
           <div className="demo-pop mx-auto mt-6 flex flex-col items-center gap-2 text-center">
             <span className="flex items-center gap-2 rounded-full border border-zinc-300 bg-zinc-50 px-3 py-1.5 text-[11px] font-medium text-zinc-600">
-              <span className="size-1.5 rounded-full bg-emerald-500" /> Connected to northwind.app
+              <span className="size-1.5 rounded-full bg-emerald-500" /> Connected to DollyCrm.app
             </span>
             <p className="mono m-0 mt-1 text-[10px] text-zinc-400">
-              3 tools discovered · add_contact · create_deal · log_activity
+              3 tools discovered
             </p>
+            <div className="mt-3">
+              <DemoAlert tone="teal">First time here — what do you even ask? Onboarding answers before you have to guess.</DemoAlert>
+            </div>
           </div>
         ) : null}
 
@@ -126,7 +171,14 @@ function ChatMock({ step, mode }: { step: number; mode: Mode }) {
 
         {!onboarding && step >= 4 ? (
           <div className="demo-pop flex items-start gap-2.5 self-start">
-            <span className="mt-0.5 grid size-6 shrink-0 place-items-center rounded-full bg-zinc-900 text-[9px] font-bold text-white">AI</span>
+            <span className="mt-0.5 grid size-6 shrink-0 place-items-center rounded-full bg-zinc-900 text-white">
+              <svg viewBox="0 0 64 64" width="13" height="13" aria-hidden="true">
+                <path
+                  d="M59.4 26.2a16 16 0 0 0-1.4-13.1A16.1 16.1 0 0 0 40.7 5.4 16.2 16.2 0 0 0 13.3 11.2a16 16 0 0 0-10.7 7.7 16.1 16.1 0 0 0 2 18.9 15.9 15.9 0 0 0 1.4 13.1 16.1 16.1 0 0 0 17.3 7.7A16 16 0 0 0 35.4 64a16.1 16.1 0 0 0 15.4-11.2 16 16 0 0 0 10.7-7.7 16.1 16.1 0 0 0-2-18.9ZM35.4 59.8a11.9 11.9 0 0 1-7.7-2.8l.4-.2 12.7-7.4a2.1 2.1 0 0 0 1-1.8V29.7l5.4 3.1a.2.2 0 0 1 .1.2v14.9a12 12 0 0 1-12 12ZM9.6 48.8a11.9 11.9 0 0 1-1.4-8l.4.2 12.7 7.4a2.1 2.1 0 0 0 2.1 0l15.6-9v6.2a.2.2 0 0 1-.1.2L26 53.2a12 12 0 0 1-16.4-4.4ZM6.2 21.1a12 12 0 0 1 6.3-5.3v15.2a2 2 0 0 0 1 1.8l15.5 8.9-5.4 3.1a.2.2 0 0 1-.2 0l-12.9-7.4a12 12 0 0 1-4.4-16.4Zm44.3 10.3-15.6-9 5.4-3.1a.2.2 0 0 1 .2 0l12.9 7.4a12 12 0 0 1-1.8 21.6V33.2a2.1 2.1 0 0 0-1.1-1.8Zm5.4-8.1-.4-.2-12.7-7.4a2.1 2.1 0 0 0-2.1 0l-15.6 9v-6.2a.2.2 0 0 1 .1-.2l12.9-7.4a12 12 0 0 1 17.8 12.4ZM22.2 34.3l-5.4-3.1a.2.2 0 0 1-.1-.2V16.2a12 12 0 0 1 19.7-9.2l-.4.2-12.7 7.4a2.1 2.1 0 0 0-1 1.8Zm2.9-6.3 6.9-4 7 4v8l-7 4-7-4Z"
+                  fill="currentColor"
+                />
+              </svg>
+            </span>
             <div className="flex flex-col items-start gap-2">
               {thinking ? (
                 <span className="flex gap-1 py-2" aria-label="Assistant is thinking">
@@ -143,16 +195,17 @@ function ChatMock({ step, mode }: { step: number; mode: Mode }) {
             </div>
           </div>
         ) : null}
+
+        {showReply ? (
+          <DemoAlert tone={mode === "current" ? "orange" : "emerald"} className="ml-[34px]">
+            {mode === "current"
+              ? "Two tools ran and the page showed nothing. Did it even work? 🤔"
+              : "Same run — the page followed along, so there's nothing to double-check."}
+          </DemoAlert>
+        ) : null}
       </div>
 
       <div className="border-t border-zinc-300 px-4 py-3">
-        {onboarding ? (
-          <div className="mb-2.5 flex flex-wrap gap-1.5">
-            {["Add a contact", "Open a $12k deal", "Log a call"].map((s) => (
-              <span className="rounded-full border border-zinc-300 px-2.5 py-1 text-[10px] text-zinc-500" key={s}>{s}</span>
-            ))}
-          </div>
-        ) : null}
         <div className="flex items-end justify-between gap-2 rounded-2xl border border-zinc-300 px-3.5 py-2 text-[12px]">
           {inputText ? (
             <span className="min-w-0 flex-1 whitespace-pre-wrap break-words leading-4 text-zinc-800">
@@ -183,32 +236,33 @@ function ChatMock({ step, mode }: { step: number; mode: Mode }) {
 function OnboardingDialog() {
   return (
     <div className="absolute inset-0 z-10 grid place-items-center bg-zinc-900/30 p-4">
-      <div className="demo-pop relative w-full max-w-[300px] rounded-xl border border-zinc-300 bg-white shadow-xl">
-        <span className="absolute right-2.5 top-2.5 grid size-5 place-items-center rounded-full border border-zinc-300 text-[11px] text-zinc-400">×</span>
-        <div className="px-4 pb-3 pt-4">
-          <p className="m-0 text-[13px] font-semibold">Northwind CRM works with agents</p>
+      <div className="demo-pop relative w-full max-w-[300px] overflow-hidden rounded-xl border border-zinc-300 bg-white shadow-xl">
+        <span className="absolute right-2.5 top-2.5 z-10 grid size-6 place-items-center rounded-full border border-zinc-300 bg-white text-[13px] leading-none text-zinc-400 shadow-sm">×</span>
+        {/* Step image */}
+        <div className="grid aspect-[2/1] w-full place-items-center border-b border-zinc-200 bg-gradient-to-br from-sky-100 via-sky-50 to-amber-50">
+          <div className="flex w-[180px] items-center gap-2.5 rounded-lg border border-zinc-200 bg-white px-3 py-2 shadow-md">
+            <span className="grid size-7 shrink-0 place-items-center rounded-full bg-[#06b6d4] text-[10px] font-semibold text-white">MC</span>
+            <span className="min-w-0">
+              <span className="block text-[12px] font-semibold leading-4">Maya Chen</span>
+              <span className="block text-[10px] text-zinc-400">Northwind · added by agent</span>
+            </span>
+          </div>
+        </div>
+        {/* Step copy */}
+        <div className="px-4 pt-3.5">
+          <p className="m-0 text-[16px] font-semibold tracking-tight">Add contacts by talking</p>
           <p className="m-0 mt-1 text-[11px] leading-4 text-zinc-500">
-            You arrived through ChatGPT. Here&rsquo;s what you can ask for on this site.
+            Ask for &ldquo;Maya from Northwind&rdquo; and watch her land in the list.
           </p>
         </div>
-        <div className="border-y border-zinc-300 px-4 py-1">
-          {[
-            { title: "Add contacts", example: "“Add Maya from Northwind”" },
-            { title: "Open deals", example: "“Start a $12k deal with Maya”" },
-            { title: "Log activity", example: "“Log my call with Priya”" },
-          ].map((cap) => (
-            <div className="flex items-start gap-2.5 border-b border-zinc-300 py-2.5 last:border-b-0" key={cap.title}>
-              <span className="mt-px text-[10px] text-[#fd3f25]">✦</span>
-              <span>
-                <span className="block text-[11.5px] font-semibold leading-4">{cap.title}</span>
-                <span className="block text-[10.5px] leading-4 text-zinc-500">{cap.example}</span>
-              </span>
-            </div>
-          ))}
-        </div>
-        <div className="flex items-center justify-between px-4 py-3">
-          <span className="text-[9px] text-zinc-400">Powered by WebMCP</span>
-          <span className="rounded-md bg-[#fd3f25] px-2.5 py-1 text-[10px] font-semibold text-white">Got it</span>
+        {/* Segmented progress + next */}
+        <div className="flex items-center justify-between gap-4 px-4 py-3.5">
+          <span className="flex w-[90px] gap-1.5">
+            <i className="h-1 flex-1 rounded-full bg-[#06b6d4]" />
+            <i className="h-1 flex-1 rounded-full bg-zinc-200" />
+            <i className="h-1 flex-1 rounded-full bg-zinc-200" />
+          </span>
+          <span className="rounded-md bg-[#06b6d4] px-3.5 py-1.5 text-[11px] font-semibold text-white">Next</span>
         </div>
       </div>
     </div>
@@ -258,8 +312,8 @@ function CrmMock({ step, mode }: { step: number; mode: Mode }) {
       {/* App chrome */}
       <div className="flex items-center justify-between border-b border-zinc-300 px-4 py-2.5">
         <span className="flex items-center gap-2 text-[13px] font-semibold">
-          <span className="grid size-5 place-items-center rounded bg-indigo-600 text-[9px] font-bold text-white">N</span>
-          Northwind CRM
+          <span className="grid size-5 place-items-center rounded bg-indigo-600 text-[9px] font-bold text-white">D</span>
+          Dolly CRM
         </span>
         <span className="hidden items-center gap-4 text-[11px] font-medium text-zinc-400 sm:flex">
           <span className="text-zinc-800">Dashboard</span><span>Contacts</span><span>Deals</span>
@@ -351,7 +405,7 @@ function CrmMock({ step, mode }: { step: number; mode: Mode }) {
       {/* Work toast on completion — new UX only */}
       {showToast ? (
         <div className="demo-pop absolute bottom-3 left-1/2 z-10 flex -translate-x-1/2 items-center gap-2 rounded-lg border border-zinc-300 bg-white px-3 py-2 text-[11px] font-medium shadow-lg">
-          <span className="text-emerald-600">✓</span> Deal created and linked to Maya Chen
+          <span className="text-emerald-600"><CheckIcon /></span> Deal created and linked to Maya Chen
         </div>
       ) : null}
 
@@ -365,34 +419,17 @@ const CALLOUTS: Record<Mode, { accent: string; label: string; body: React.ReactN
   current: {
     accent: "border-[var(--red)]",
     label: "Off camera",
-    body: (
-      <>
-        Two tools ran against your product — <code className="mono text-[var(--silver)]">add_contact</code>,{" "}
-        <code className="mono text-[var(--silver)]">create_deal</code> — and the page never said a word. Rows
-        just appeared. The only trace lives in someone else&rsquo;s chat thread.
-      </>
-    ),
+    body: <>Two tools just ran — and the page never showed a thing.</>,
   },
   new: {
     accent: "border-[var(--cyan)]",
     label: "In frame",
-    body: (
-      <>
-        The connected header tracks every call, the glow and spotlight follow the work, new records get
-        flagged, and a toast confirms the landing. The person watching always knows who did what.
-      </>
-    ),
+    body: <>The same run, with every action visible on the page.</>,
   },
   onboarding: {
     accent: "border-[var(--cyan)]",
     label: "The first frame",
-    body: (
-      <>
-        Arrival is an onboarding moment. The deeplink carries{" "}
-        <code className="mono text-[var(--silver)]">?webmcpconnected=true</code>; the provider sees it and opens
-        a dialog that shows what&rsquo;s possible and plants a first ask — held open here so you can read it.
-      </>
-    ),
+    body: <>The site opens with a tour of what you can ask for — no guessing.</>,
   },
 };
 
@@ -414,7 +451,7 @@ export function HeroDemo() {
     return () => clearTimeout(timer);
   }, [step, mode]);
 
-  const callout = CALLOUTS[mode];
+  // const callout = CALLOUTS[mode]; // callout copy kept in CALLOUTS above
 
   return (
     <div className="flex flex-col items-center gap-10 max-w-4xl mx-auto">
@@ -425,12 +462,12 @@ export function HeroDemo() {
         aria-label="UX mode"
       >
         {([
-          ["current", "Current UX"],
-          ["new", "New UX"],
+          ["current", "Without Dolly"],
+          ["new", "With Dolly"],
           ["onboarding", "Onboarding"],
         ] as const).map(([value, label]) => (
           <button
-            className={`cursor-pointer text-sm rounded-full border-0 px-4 py-2.5 transition-colors sm:px-5 ${
+            className={`cursor-pointer text-xs sm:text-sm rounded-full border-0 px-3 py-2 sm:px-5 sm:py-2.5 transition-colors ${
               mode === value
                 ? "bg-sky-800/90 text-[var(--cyan)]X text-white"
                 : "bg-transparent  hover:opacity-90"
@@ -474,10 +511,10 @@ export function HeroDemo() {
               </span>
               <span className="flex flex-1 items-center gap-1.5 rounded-md border border-zinc-300 bg-white px-2.5 py-1 text-[11px] text-zinc-500">
                 <svg width="9" height="9" viewBox="0 0 10 10" fill="none" aria-hidden="true"><rect x="2" y="4.5" width="6" height="4" rx="1" stroke="#a1a1aa" strokeWidth="1.2" /><path d="M3.5 4.5V3a1.5 1.5 0 0 1 3 0v1.5" stroke="#a1a1aa" strokeWidth="1.2" /></svg>
-                northwind.app
+                dollycrm.app
               </span>
               {mode !== "current" ? (
-                <span className="mono bg-[var(--cyan)] px-1.5 py-0.5 text-[0.58rem] font-bold uppercase tracking-[0.1em] text-[var(--screen-deep)]">+ Dolly</span>
+                <span className="mono rounded-lg bg-[var(--cyan)] px-1.5 py-0.5 text-[0.58rem] font-bold uppercase tracking-[0.1em] text-[var(--screen-deep)]">Dolly</span>
               ) : null}
             </div>
             <div className="min-h-0 flex-1"><CrmMock step={step} mode={mode} /></div>
@@ -486,13 +523,11 @@ export function HeroDemo() {
         </div>
     </div>
 
-      {/* Callout: what the user could actually see */}
+      {/* Callout hidden — the in-chat alerts do the same job.
       <div key={mode} className="-mt-14X relative z-10 demo-pop mx-auto w-full max-w-3xl text-center">
-        <p className="m-0 inline-flex items-center rounded-full bg-teal-100 font-medium px-3.5 py-1 text-sm tracking-[0.06em]">
-          {callout.label}
-        </p>
-        <p className="m-0 mt-3 text-lg leading-relaxed text-[var(--silver)]">{callout.body}</p>
+        <p className="m-0 text-lg leading-relaxed text-[var(--silver)]">{callout.body}</p>
       </div>
+      */}
     </div>
   );
 }

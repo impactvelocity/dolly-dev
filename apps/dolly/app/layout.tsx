@@ -2,15 +2,12 @@ import type { Metadata } from "next";
 import { Cal_Sans } from "next/font/google";
 import { GeistMono } from "geist/font/mono";
 import { GeistSans } from "geist/font/sans";
-import {
-  AgentStatusBadge,
-  WebMCPExperienceProvider,
-} from "@webmcp-sdk/experience";
+import { RigProvider } from "@dolly/rig";
 
 // Tailwind first so the SDK's `components` layer sits below `utilities`,
 // letting className props override the SDK defaults.
 import "./globals.css";
-import "@webmcp-sdk/experience/styles.css";
+import "@dolly/rig/styles.css";
 
 const calSans = Cal_Sans({
   subsets: ["latin"],
@@ -45,21 +42,46 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className={`${GeistSans.variable} ${GeistMono.variable} ${calSans.variable}`}>
-        <WebMCPExperienceProvider
+        <RigProvider
           appName="Dolly.dev"
           capabilities={capabilities}
           theme={{
             mode: "light",
-            brandColor: "#fd3f25",
+            brandColor: "#06b6d4",
           }}
           glow={{
-            colors: ["#8cfffd", "#fd3f25", "#8cfffd"],
-            ringColor: "#fd3f25",
+            colors: ["#8cfffd", "#06b6d4", "#8cfffd"],
+            ringColor: "#06b6d4",
+          }}
+          highlight={{
+            color: "#06b6d4",
+          }}
+          onboarding={{
+            steps: [
+              {
+                image: "/onboarding/roll.svg",
+                title: "Roll the camera",
+                description:
+                  "Run a live take of the ambient work glow on this page.",
+              },
+              {
+                image: "/onboarding/spotlight.svg",
+                title: "Spotlight a scene",
+                description:
+                  "Focus any section of the site while explaining it.",
+              },
+              {
+                image: "/onboarding/log.svg",
+                title: "Log a take",
+                description:
+                  "Record an entry in the visible agent history feed.",
+              },
+            ],
+            doneLabel: "Try it",
           }}
         >
           {children}
-          <AgentStatusBadge corner="bottom-left" />
-        </WebMCPExperienceProvider>
+        </RigProvider>
       </body>
     </html>
   );

@@ -12,7 +12,7 @@ export function Card({
 }: useRender.ComponentProps<"div">): React.ReactElement {
   const defaultProps = {
     className: cn(
-      "relative flex flex-col rounded-2xl border bg-card not-dark:bg-clip-padding text-card-foreground shadow-xs/5 before:pointer-events-none before:absolute before:inset-0 before:rounded-[calc(var(--radius-2xl)-1px)] before:shadow-[0_1px_--theme(--color-black/4%)] dark:before:shadow-[0_-1px_--theme(--color-white/6%)]",
+      "relative flex flex-col overflow-hidden rounded-[16px] bg-card text-card-foreground shadow-card",
       className,
     ),
     "data-slot": "card",
@@ -71,7 +71,7 @@ export function CardFrameTitle({
   ...props
 }: useRender.ComponentProps<"div">): React.ReactElement {
   const defaultProps = {
-    className: cn("self-center font-semibold text-sm", className),
+    className: cn("self-center font-medium text-sm", className),
     "data-slot": "card-frame-title",
   };
 
@@ -162,7 +162,7 @@ export function CardTitle({
   ...props
 }: useRender.ComponentProps<"div">): React.ReactElement {
   const defaultProps = {
-    className: cn("font-heading font-semibold text-lg leading-none", className),
+    className: cn("font-heading font-medium text-lg leading-none", className),
     "data-slot": "card-title",
   };
 

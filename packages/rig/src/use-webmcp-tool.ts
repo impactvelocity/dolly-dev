@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 
-import { useOptionalWebMCPExperience } from "./experience-provider";
+import { useOptionalRig } from "./rig-provider";
 import { getModelContext } from "./model-context";
 import type { WebMCPRegistrationOptions, WebMCPTool } from "./types";
 
@@ -20,11 +20,11 @@ export function useWebMCPTool<TInput = Record<string, unknown>, TResult = unknow
   const optionsKey = useMemo(() => JSON.stringify(options), [options]);
   const [state, setState] = useState<ToolRegistrationState>("checking");
 
-  const experience = useOptionalWebMCPExperience();
+  const rig = useOptionalRig();
 
-  // Report UX metadata to the experience provider (when present) so
+  // Report UX metadata to the rig provider (when present) so
   // surfaces like the tools drawer can list every registered tool.
-  const registerToolInfo = experience?.registerToolInfo ?? null;
+  const registerToolInfo = rig?.registerToolInfo ?? null;
   useEffect(() => {
     if (!registerToolInfo) return;
     return registerToolInfo({
@@ -37,8 +37,8 @@ export function useWebMCPTool<TInput = Record<string, unknown>, TResult = unknow
   // Auto-log a history entry around execute when the tool declares a `log`
   // template, interpolating %%key%% tokens from the tool input. Refs keep
   // the registered tool stable while templates or the provider change.
-  const logRef = useRef({ log: tool.log, logIcon: tool.logIcon, logTask: experience?.logTask });
-  logRef.current = { log: tool.log, logIcon: tool.logIcon, logTask: experience?.logTask };
+  const logRef = useRef({ log: tool.log, logIcon: tool.logIcon, logTask: rig?.logTask });
+  logRef.current = { log: tool.log, logIcon: tool.logIcon, logTask: rig?.logTask };
 
   useEffect(() => {
     const modelContext = getModelContext();

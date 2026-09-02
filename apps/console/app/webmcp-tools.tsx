@@ -2,7 +2,14 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { useWebMCPExperience, useWebMCPTool } from "@webmcp-sdk/experience";
+import {
+  BriefcaseIcon,
+  SearchIcon,
+  TrendingUpIcon,
+  Trash2Icon,
+  UserPlusIcon,
+} from "lucide-react";
+import { useRig, useWebMCPTool } from "@dolly/rig";
 
 import {
   AlertDialog,
@@ -34,7 +41,7 @@ const EMPTY_SCHEMA = {
 const wait = (duration: number) => new Promise((resolve) => setTimeout(resolve, duration));
 
 export function CrmWebMCPTools() {
-  const experience = useWebMCPExperience();
+  const rig = useRig();
   const router = useRouter();
   const crm = useCrm();
   const [duplicateContact, setDuplicateContact] = useState<Contact | null>(null);
@@ -42,14 +49,14 @@ export function CrmWebMCPTools() {
   const goTo = async (path: string, selector: string, message: string) => {
     router.push(path);
     await wait(350);
-    experience.focus(selector, message);
+    rig.focus(selector, message);
   };
 
   useWebMCPTool({
     name: "search_contacts",
     example: "Find everyone at Halcyon Health",
     log: "Searched contacts for “%%query%%”",
-    logIcon: "🔍",
+    logIcon: <SearchIcon size={13} strokeWidth={1.8} />,
     description:
       "Search CRM contacts by name, company, or email. Opens the contacts page filtered to the matches.",
     inputSchema: {
@@ -62,7 +69,7 @@ export function CrmWebMCPTools() {
     },
     annotations: { readOnlyHint: true },
     async execute({ query }: { query: string }) {
-      experience.startWork(`Searching contacts for “${query}”…`);
+      rig.startWork(`Searching contacts for “${query}”…`);
 
       const needle = query.trim().toLowerCase();
       const matches = crm.contacts.filter((contact) =>
@@ -74,7 +81,7 @@ export function CrmWebMCPTools() {
       await goTo("/contacts", "#contacts", "Filtering the contact list…");
       await wait(400);
 
-      experience.endWork(
+      rig.endWork(
         matches.length === 1 ? "Found 1 matching contact" : `Found ${matches.length} matching contacts`,
       );
 
@@ -128,7 +135,7 @@ export function CrmWebMCPTools() {
       );
       if (existing) {
         setDuplicateContact(existing);
-        experience.failWork(`${existing.name} is already a contact`);
+        rig.failWork(`${existing.name} is already a contact`);
         return {
           content: [
             {
@@ -140,7 +147,7 @@ export function CrmWebMCPTools() {
         };
       }
 
-      experience.startWork(`Creating a contact for ${name}…`, undefined, { overlay: true });
+      rig.startWork(`Creating a contact for ${name}…`, undefined, { overlay: true });
       await goTo("/contacts", "#contacts", "Adding the contact to the list…");
       // Artificial delay so the glow overlay is easy to see while testing.
       await wait(3000);
@@ -149,11 +156,11 @@ export function CrmWebMCPTools() {
 
       // Logged manually (not via a `log` template) because the duplicate
       // branch above returns without creating anything.
-      experience.logTask("Added %%name%% as a contact", { name: contact.name }, {
-        icon: "👤",
+      rig.logTask("Added %%name%% as a contact", { name: contact.name }, {
+        icon: <UserPlusIcon size={13} strokeWidth={1.8} />,
         toolName: "create_contact",
       });
-      experience.endWork(`${contact.name} added as a ${contact.status.toLowerCase()}`);
+      rig.endWork(`${contact.name} added as a ${contact.status.toLowerCase()}`);
       return {
         content: [
           {
@@ -188,14 +195,14 @@ export function CrmWebMCPTools() {
       );
 
       if (!match) {
-        experience.failWork(`No contact matches “${contact}”`);
+        rig.failWork(`No contact matches “${contact}”`);
         return {
           content: [{ type: "text", text: `No contact matches “${contact}”. Nothing was removed.` }],
           isError: true,
         };
       }
 
-      const approved = await experience.confirm({
+      const approved = await rig.confirm({
         title: `Remove ${match.name}?`,
         description: `The agent wants to remove ${match.name} (${match.company}, ${match.email}) from your contacts.`,
         tone: "destructive",
@@ -203,7 +210,7 @@ export function CrmWebMCPTools() {
         autoContinueMs: 5000,
       });
       if (!approved) {
-        experience.failWork(`Removing ${match.name} was cancelled`);
+        rig.failWork(`Removing ${match.name} was cancelled`);
         return {
           content: [
             { type: "text", text: `The user cancelled removing ${match.name}. Nothing was removed.` },
@@ -211,18 +218,18 @@ export function CrmWebMCPTools() {
         };
       }
 
-      experience.startWork(`Removing ${match.name}…`);
+      rig.startWork(`Removing ${match.name}…`);
       await goTo("/contacts", "#contacts", `Removing ${match.name}…`);
       await wait(400);
       crm.removeContact(match.id);
 
       // Logged manually (not via a `log` template) because the no-match
       // branch above returns without removing anything.
-      experience.logTask("Removed %%name%% from contacts", { name: match.name }, {
-        icon: "🗑️",
+      rig.logTask("Removed %%name%% from contacts", { name: match.name }, {
+        icon: <Trash2Icon size={13} strokeWidth={1.8} />,
         toolName: "remove_contact",
       });
-      experience.endWork(`${match.name} removed`);
+      rig.endWork(`${match.name} removed`);
       return {
         content: [{ type: "text", text: `Removed ${match.name} (${match.company}, ${match.email}).` }],
       };
@@ -233,7 +240,7 @@ export function CrmWebMCPTools() {
     name: "create_deal",
     example: "Create a $20k deal with Initech",
     log: "Created the %%name%% deal with %%company%%",
-    logIcon: "💼",
+    logIcon: <BriefcaseIcon size={13} strokeWidth={1.8} />,
     description: "Create a new deal in the pipeline.",
     inputSchema: {
       type: "object",
@@ -261,13 +268,13 @@ export function CrmWebMCPTools() {
       value: number;
       stage?: DealStage;
     }) {
-      experience.startWork(`Creating the ${name} deal…`);
+      rig.startWork(`Creating the ${name} deal…`);
       await goTo("/deals", "#deals", "Adding the deal to the pipeline…");
       await wait(400);
 
       const deal = crm.addDeal({ name, company, value, stage });
 
-      experience.endWork(`${deal.name} added to ${deal.stage}`);
+      rig.endWork(`${deal.name} added to ${deal.stage}`);
       return {
         content: [
           {
@@ -300,14 +307,14 @@ export function CrmWebMCPTools() {
       );
 
       if (!match) {
-        experience.failWork(`No deal matches “${deal}”`);
+        rig.failWork(`No deal matches “${deal}”`);
         return {
           content: [{ type: "text", text: `No deal matches “${deal}”. Nothing was removed.` }],
           isError: true,
         };
       }
 
-      const approved = await experience.confirm({
+      const approved = await rig.confirm({
         title: `Remove the ${match.name} deal?`,
         description: `The agent wants to remove “${match.name}” (${match.company}, ${formatCurrency(match.value)}) from the pipeline.`,
         tone: "destructive",
@@ -315,7 +322,7 @@ export function CrmWebMCPTools() {
         autoContinueMs: 5000,
       });
       if (!approved) {
-        experience.failWork(`Removing ${match.name} was cancelled`);
+        rig.failWork(`Removing ${match.name} was cancelled`);
         return {
           content: [
             { type: "text", text: `The user cancelled removing the ${match.name} deal. Nothing was removed.` },
@@ -323,12 +330,12 @@ export function CrmWebMCPTools() {
         };
       }
 
-      experience.startWork(`Removing the ${match.name} deal…`);
+      rig.startWork(`Removing the ${match.name} deal…`);
       await goTo("/deals", "#deals", `Removing ${match.name}…`);
       await wait(400);
       crm.removeDeal(match.id);
 
-      experience.endWork(`${match.name} removed`);
+      rig.endWork(`${match.name} removed`);
       return {
         content: [
           {
@@ -365,14 +372,14 @@ export function CrmWebMCPTools() {
       );
 
       if (!match) {
-        experience.failWork(`No deal matches “${deal}”`);
+        rig.failWork(`No deal matches “${deal}”`);
         return {
           content: [{ type: "text", text: `No deal matches “${deal}”. Nothing was changed.` }],
           isError: true,
         };
       }
       if (!DEAL_STAGES.includes(stage)) {
-        experience.failWork(`“${stage}” is not a pipeline stage`);
+        rig.failWork(`“${stage}” is not a pipeline stage`);
         return {
           content: [
             { type: "text", text: `“${stage}” is not a valid stage. Use one of: ${DEAL_STAGES.join(", ")}.` },
@@ -381,7 +388,7 @@ export function CrmWebMCPTools() {
         };
       }
 
-      const approved = await experience.confirm({
+      const approved = await rig.confirm({
         title: `Move ${match.name} to ${stage}?`,
         description: `The agent wants to move “${match.name}” (${match.company}, ${formatCurrency(match.value)}) from ${match.stage} to ${stage}.`,
         tone: "positive",
@@ -389,7 +396,7 @@ export function CrmWebMCPTools() {
         autoContinueMs: 5000,
       });
       if (!approved) {
-        experience.failWork(`Moving ${match.name} was cancelled`);
+        rig.failWork(`Moving ${match.name} was cancelled`);
         return {
           content: [
             { type: "text", text: `The user cancelled moving the ${match.name} deal. Nothing was changed.` },
@@ -397,16 +404,16 @@ export function CrmWebMCPTools() {
         };
       }
 
-      experience.startWork(`Updating the ${match.name} deal…`);
+      rig.startWork(`Updating the ${match.name} deal…`);
       await goTo("/deals", "#deals", `Moving ${match.name} to ${stage}…`);
       await wait(400);
       crm.updateDealStage(match.id, stage);
 
-      experience.logTask("Moved the %%deal%% deal to %%stage%%", { deal: match.name, stage }, {
-        icon: "📈",
+      rig.logTask("Moved the %%deal%% deal to %%stage%%", { deal: match.name, stage }, {
+        icon: <TrendingUpIcon size={13} strokeWidth={1.8} />,
         toolName: "update_deal_stage",
       });
-      experience.endWork(`${match.name} moved to ${stage}`);
+      rig.endWork(`${match.name} moved to ${stage}`);
       return {
         content: [
           {
@@ -425,7 +432,7 @@ export function CrmWebMCPTools() {
     inputSchema: EMPTY_SCHEMA,
     annotations: { readOnlyHint: true },
     async execute() {
-      experience.startWork("Reading the pipeline…");
+      rig.startWork("Reading the pipeline…");
       await goTo("/deals", "#deals", "Totaling deals per stage…");
       await wait(400);
 
@@ -440,7 +447,7 @@ export function CrmWebMCPTools() {
           ? 0
           : Math.round((deals.filter((candidate) => candidate.stage === "Won").length / deals.length) * 100);
 
-      experience.endWork("Pipeline summary ready");
+      rig.endWork("Pipeline summary ready");
       return {
         content: [
           {
@@ -454,41 +461,34 @@ export function CrmWebMCPTools() {
 
   useWebMCPTool({
     name: "update_crm_settings",
-    example: "Rename the CRM to Pipeline Pro",
-    description:
-      "Update workspace settings: rename the CRM or the workspace shown in the sidebar.",
+    example: "Rename the workspace to Globex",
+    description: "Update workspace settings: rename the workspace shown in the sidebar.",
     inputSchema: {
       type: "object",
       properties: {
-        crmName: { type: "string", description: "New name for the CRM product, e.g. “Relay CRM”." },
         workspaceName: { type: "string", description: "New name for the workspace, e.g. “Acme Inc.”." },
       },
       additionalProperties: false,
     },
-    async execute({ crmName, workspaceName }: { crmName?: string; workspaceName?: string }) {
-      const changes: string[] = [];
-      if (crmName?.trim()) changes.push(`CRM name to “${crmName.trim()}”`);
-      if (workspaceName?.trim()) changes.push(`workspace name to “${workspaceName.trim()}”`);
-
-      if (changes.length === 0) {
-        experience.failWork("No settings were provided");
+    async execute({ workspaceName }: { workspaceName?: string }) {
+      if (!workspaceName?.trim()) {
+        rig.failWork("No settings were provided");
         return {
-          content: [{ type: "text", text: "Provide crmName and/or workspaceName to update settings." }],
+          content: [{ type: "text", text: "Provide workspaceName to update settings." }],
           isError: true,
         };
       }
 
-      experience.startWork("Updating workspace settings…");
-      await goTo("/settings", "#crm-settings", "Applying the new names…");
+      rig.startWork("Updating workspace settings…");
+      await goTo("/settings", "#crm-settings", "Applying the new name…");
       await wait(400);
 
-      crm.updateSettings({
-        ...(crmName?.trim() ? { crmName: crmName.trim() } : {}),
-        ...(workspaceName?.trim() ? { workspaceName: workspaceName.trim() } : {}),
-      });
+      crm.updateSettings({ workspaceName: workspaceName.trim() });
 
-      experience.endWork("Settings updated");
-      return { content: [{ type: "text", text: `Updated ${changes.join(" and ")}.` }] };
+      rig.endWork("Settings updated");
+      return {
+        content: [{ type: "text", text: `Updated workspace name to “${workspaceName.trim()}”.` }],
+      };
     },
   });
 

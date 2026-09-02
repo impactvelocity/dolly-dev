@@ -1,32 +1,29 @@
-import type { ReactNode } from "react";
-import { OpenInButton } from "@webmcp-sdk/experience";
-import { CodeScroll } from "./components/code-scroll";
 import { CornerMarks } from "./components/corner-marks";
+import { FeatureSection } from "./components/feature-section";
 import { HeroDemo } from "./components/hero-demo";
-import { highlight } from "./components/highlight";
 import { OnboardingPreview } from "./components/onboarding-preview";
 import {
   ApiPreview,
-  ConnectedPreview,
   HistoryPreview,
   PermissionPreview,
   ShowWorkPreview,
   ToolsPreview,
 } from "./components/primitive-previews";
 import { ScreenTests } from "./components/screen-tests";
+import {
+  ApiMedia,
+  ConnectionMedia,
+  HistoryMedia,
+  MultiplayerMedia,
+  OnboardingMedia,
+  OpenInMedia,
+  PermissionMedia,
+  ShowWorkMedia,
+  ToolsMedia,
+} from "./components/section-media";
 import { SiteHeader } from "./components/site-header";
 
-const REGISTER_SNIPPET = `// WebMCP: the page itself exposes tools to the browser.
-document.modelContext.registerTool({
-  name: "add_to_cart",
-  description: "Add a product to the active cart",
-  inputSchema: { /* JSON Schema */ },
-  async execute(input) {
-    // Your own application code runs the action.
-  },
-});`;
-
-const OPEN_IN_SNIPPET = `import { OpenInButton } from "@webmcp-sdk/experience";
+const OPEN_IN_SNIPPET = `import { OpenInButton } from "@dolly/rig";
 
 // Deeplinks the current page into ChatGPT. Hides itself
 // when the site is already running inside an agent.
@@ -42,7 +39,7 @@ const OPEN_IN_SNIPPET = `import { OpenInButton } from "@webmcp-sdk/experience";
   Plan this trip in ChatGPT
 </OpenInButton>`;
 
-const ONBOARDING_SNIPPET = `<WebMCPExperienceProvider
+const ONBOARDING_SNIPPET = `<RigProvider
   appName="Trip Planner"
   capabilities={[
     {
@@ -73,37 +70,34 @@ const ONBOARDING_SNIPPET = `<WebMCPExperienceProvider
 >`;
 
 const CONNECTED_SNIPPET = `import {
-  AgentStatusBadge,
   AgentStatusHeader,
   detectAgent,
-} from "@webmcp-sdk/experience";
+} from "@dolly/rig";
 
-// Floating dot — connection state at a glance.
-<AgentStatusBadge corner="bottom-left" />
-
-// Full-width bar — status, with room for tools and info.
-<AgentStatusHeader />
+// Full-width bar — status, with room for tools,
+// history, and live progress while work runs.
+<AgentStatusHeader showIndicator showProgress />
 
 // The signals underneath
 document.modelContext   // the browser speaks WebMCP
 detectAgent()           // which agent injected the bridge`;
 
-const WORK_SNIPPET = `const experience = useWebMCPExperience();
+const WORK_SNIPPET = `const rig = useRig();
 
 async function execute({ nights }) {
   // Full-screen glow while the agent works.
-  experience.startWork("Booking the hotel…", undefined, {
+  rig.startWork("Booking the hotel…", undefined, {
     overlay: true,
   });
 
   // Spotlight the element being changed.
-  experience.focus("#itinerary", "Adding two nights…");
+  rig.focus("#itinerary", "Adding two nights…");
 
   // Updates from inside the tool call.
-  experience.progress("Confirming dates…");
+  rig.progress("Confirming dates…");
 
-  experience.endWork("Hotel added to the itinerary");
-  // experience.failWork("The dates were unavailable");
+  rig.endWork("Hotel added to the itinerary");
+  // rig.failWork("The dates were unavailable");
 }`;
 
 const TOOLS_SNIPPET = `useWebMCPTool({
@@ -127,10 +121,10 @@ const HISTORY_SNIPPET = `useWebMCPTool({
 });
 
 // Or record anything by hand.
-experience.logTask(
+rig.logTask(
   "Added %%name%% to the trip",
   { name: "Mom" },
-  { icon: "👩" },
+  { icon: <UserIcon /> },
 );
 
 // "What agents did here"
@@ -138,7 +132,7 @@ experience.logTask(
 
 const PERMISSION_SNIPPET = `async function execute({ tripId }) {
   // The tool pauses here until a human decides.
-  const ok = await experience.confirm({
+  const ok = await rig.confirm({
     title: "Delete the Paris trip?",
     description: "The agent wants to delete this trip.",
     tone: "destructive",   // red Continue button
@@ -158,7 +152,9 @@ const PERMISSION_SNIPPET = `async function execute({ tripId }) {
   await deleteTrip(tripId);
 }`;
 
-const STYLING_SNIPPET = `<WebMCPExperienceProvider
+// Branding section hidden for now — snippet kept for when it returns.
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+const STYLING_SNIPPET = `<RigProvider
   appName="Trip Planner"
   capabilities={capabilities}
   // One theme for every surface: dialogs, drawers,
@@ -180,11 +176,11 @@ const STYLING_SNIPPET = `<WebMCPExperienceProvider
 >`;
 
 const API_SNIPPET = `import {
-  useWebMCPExperience,
+  useRig,
   useWebMCPTool,
-} from "@webmcp-sdk/experience";
+} from "@dolly/rig";
 
-const experience = useWebMCPExperience();
+const rig = useRig();
 
 useWebMCPTool({
   name: "add_to_cart",
@@ -197,28 +193,14 @@ useWebMCPTool({
     required: ["productId"],
   },
   async execute({ productId }) {
-    experience.startWork("Adding the product…", "#cart", {
+    rig.startWork("Adding the product…", "#cart", {
       overlay: true,
     });
     await addToCart(productId);
-    experience.endWork("Added to the cart");
+    rig.endWork("Added to the cart");
     return { content: [{ type: "text", text: "Added to cart" }] };
   },
 });`;
-
-function CodeBlock({ code }: { code: string }) {
-  return (
-    <CornerMarks>
-      <div className="code-window">
-        <CodeScroll>
-          <pre>
-            <code>{highlight(code)}</code>
-          </pre>
-        </CodeScroll>
-      </div>
-    </CornerMarks>
-  );
-}
 
 // Hidden for now — swap back in under the text when real images are ready.
 // function PlaceholderImage() {
@@ -231,40 +213,6 @@ function CodeBlock({ code }: { code: string }) {
 //     />
 //   );
 // }
-
-function Primitive({
-  id,
-  title,
-  code,
-  aside,
-  children,
-}: {
-  id: string;
-  title: string;
-  code: string;
-  aside?: ReactNode;
-  children: ReactNode;
-}) {
-  return (
-    <section
-      id={id}
-      className="mx-auto max-w-6xl scroll-mt-28 px-6 py-20"
-    >
-      <div className="grid items-start gap-10 lg:grid-cols-2">
-        <div>
-          <h2 className="m-0 text-4xl tracking-wide text-pretty">
-            {title}
-          </h2>
-          <div className="mt-5 grid gap-4 text-base leading-relaxed text-[var(--muted)]">
-            {children}
-          </div>
-          {aside ? <div className="mt-7">{aside}</div> : null}
-        </div>
-        <CodeBlock code={code} />
-      </div>
-    </section>
-  );
-}
 
 export default function Home() {
   return (
@@ -301,9 +249,9 @@ export default function Home() {
 
             </h1>
             <p className="reveal reveal-delay-2 mx-auto mt-7 max-w-2xl text-2xl font-medium leading-relaxedX text-white/90 text-shadow-sm text-shadow-sky-700/20">
-              An agent can operate a WebMCP site without the page showing a
-              thing. Dolly is a React SDK that makes the action visible —
-              what the agent is doing, what it did, and what it can do.
+              WebMCP puts an agent on your page, working alongside you.
+              Dolly follows the action — showing what it&rsquo;s doing,
+              what it did, and what it can do.
             </p>
 
             <div className="reveal reveal-delay-3 mt-16">
@@ -326,332 +274,539 @@ export default function Home() {
               </p>
             </div>
           </CornerMarks>
-          <div className="mt-10 flex flex-wrap items-center justify-center gap-3">
+          <div className="mx-auto mt-10 flex max-w-4xl flex-col gap-8 sm:flex-row sm:items-center sm:justify-between">
+            {/* Author */}
+            <div className="flex items-center gap-4">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src="/dylan.png"
+                alt="Dylan Jones"
+                className="size-14 rounded-full border border-[var(--line-soft)] object-cover"
+              />
+              <div>
+                <p className="m-0 text-base font-medium text-[var(--silver)]">Dylan Jones</p>
+                <p className="m-0 text-sm text-[var(--muted)]">Creator of Dolly.dev</p>
+                <p className="mono m-0 mt-1.5 flex items-center gap-4 text-[0.72rem] tracking-[0.06em]">
+                  {[
+                    ["Site", "https://hidylanjones.com"],
+                    ["LinkedIn", "https://www.linkedin.com/in/hidylanjones"],
+                    ["Twitter", "https://twitter.com/hidylanjones"],
+                  ].map(([label, href]) => (
+                    <a
+                      key={label}
+                      href={href}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="text-[var(--muted)] underline decoration-[var(--line)] underline-offset-4 transition-colors hover:text-[var(--silver)]"
+                    >
+                      {label}
+                    </a>
+                  ))}
+                </p>
+              </div>
+            </div>
+
+            {/* CTAs */}
+            <div className="flex flex-wrap items-center gap-3">
             <a
-              className="btn-key"
-              href="https://github.com/monetizedesign/webmcp-sdk"
+              className="btn-pill btn-pill--teal"
+              href="https://github.com/impactvelocity/dolly-dev"
               target="_blank"
               rel="noreferrer"
             >
+              <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor" aria-hidden="true">
+                <path d="M12 .5C5.65.5.5 5.65.5 12c0 5.08 3.29 9.39 7.86 10.91.58.1.79-.25.79-.55v-2.17c-3.2.7-3.87-1.36-3.87-1.36-.52-1.33-1.28-1.68-1.28-1.68-1.05-.72.08-.7.08-.7 1.16.08 1.77 1.19 1.77 1.19 1.03 1.77 2.7 1.26 3.36.96.1-.75.4-1.26.73-1.55-2.55-.29-5.23-1.28-5.23-5.68 0-1.26.45-2.28 1.19-3.09-.12-.29-.52-1.46.11-3.05 0 0 .97-.31 3.18 1.18a11.1 11.1 0 0 1 5.79 0c2.2-1.49 3.17-1.18 3.17-1.18.63 1.59.23 2.76.12 3.05.74.81 1.18 1.83 1.18 3.09 0 4.41-2.69 5.38-5.25 5.66.41.36.78 1.06.78 2.14v3.17c0 .3.2.66.8.55A11.5 11.5 0 0 0 23.5 12C23.5 5.65 18.35.5 12 .5Z" />
+              </svg>
               GitHub repo
             </a>
-            <a className="btn-ghost" href="https://northwind.app" target="_blank" rel="noreferrer">
-              Demo CRM app
+            <a
+              className="btn-pill btn-pill--ghost"
+              href="https://dollycrm.app/"
+              target="_blank"
+              rel="noreferrer"
+            >
+              <svg
+                viewBox="0 0 24 24"
+                width="18"
+                height="18"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                aria-hidden="true"
+              >
+                <path d="m16 13 5.223 3.482a.5.5 0 0 0 .777-.416V7.87a.5.5 0 0 0-.752-.432L16 10.5" />
+                <rect x="2" y="6" width="14" height="12" rx="2" />
+              </svg>
+              View demo
             </a>
-          </div>
-
-          {/* Author */}
-          <div className="mt-12 flex flex-col items-center gap-3">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              src="/dylan.png"
-              alt="Dylan Jones"
-              className="size-14 rounded-full border border-[var(--line-soft)] object-cover"
-            />
-            <p className="m-0 text-base font-medium text-[var(--silver)]">Dylan Jones</p>
-            <p className="m-0 -mt-2 text-sm text-[var(--muted)]">Creator of Dolly.dev</p>
-            <p className="mono m-0 flex items-center gap-4 text-[0.72rem] tracking-[0.06em]">
-              {[
-                ["Site", "https://hidylanjones.com"],
-                ["LinkedIn", "https://www.linkedin.com/in/hidylanjones"],
-                ["Twitter", "https://twitter.com/hidylanjones"],
-              ].map(([label, href]) => (
-                <a
-                  key={label}
-                  href={href}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="text-[var(--muted)] underline decoration-[var(--line)] underline-offset-4 transition-colors hover:text-[var(--silver)]"
-                >
-                  {label}
-                </a>
-              ))}
-            </p>
+            </div>
           </div>
         </section>
 
         {/* ---- The problem ----------------------------------------- */}
-        <section
+        <FeatureSection
           id="problem"
-          className="mx-auto max-w-6xl scroll-mt-28 px-6 py-20"
-        >
-          <div className="grid items-start gap-10 lg:grid-cols-2">
-            <div>
-              <h2 className="m-0 text-4xl tracking-wide text-pretty">
-                Agents operate the site with you
-              </h2>
-              <div className="mt-5 grid gap-4 text-base leading-relaxed text-[var(--muted)]">
-                <p className="m-0">
-                  Letting ChatGPT operate a real site is genuinely great. You
-                  ask for something in plain language and it happens, while you
-                  keep everything an interface is good at: you can still click
-                  around, see your data, and stay oriented.
-                </p>
-                <p className="m-0">
-                  UI is not dead, and not everything should become a chatbox.
-                  The more interesting shape is multiplayer: a person and an
-                  agent working the same interface at the same time.
-                </p>
-                <p className="m-0">
-                  WebMCP handles the wiring. A page registers typed tools on{" "}
-                  <code className="mono">document.modelContext</code> and an
-                  agent calls them. What it doesn&rsquo;t handle is feedback.
-                  Today the agent can call tools and navigate, and the page
-                  shows nothing about what is happening, what could happen, or
-                  whether an agent is connected at all. For headless automation
-                  that&rsquo;s fine. In multiplayer, feedback is most of the
-                  experience.
-                </p>
-                <p className="m-0">
-                  Dolly is the rig that follows the action: a set of
-                  primitives that show what the agent can do, what it&rsquo;s
-                  doing right now, and what it did.
-                </p>
-              </div>
-            </div>
-            <div>
-              <CodeBlock code={REGISTER_SNIPPET} />
-              <p className="m-0 mt-4 text-sm leading-relaxed text-[var(--muted)]">
-                There is no standard feedback for what WebMCP is doing, has
-                done, or can do — Dolly is an attempt at solving that.
+          headline={
+            <>
+              WebMCP unlocks
+              <br />
+              multiplayer
+            </>
+          }
+          subheadline={
+            <>
+              WebMCP gives agents real controls for your site — ask in plain
+              language and it happens, while you keep everything an interface
+              is good at: click around, see your data, stay oriented
+            </>
+          }
+          showTitle={
+            <>
+              Not everything
+              <br />
+              should be a chatbox
+            </>
+          }
+          showDescription={
+            <>
+              The interesting shape is multiplayer: you and an agent working
+              the same interface at the same time.
+            </>
+          }
+          media={<MultiplayerMedia />}
+          docs={
+            <>
+              <p className="m-0">
+                WebMCP handles the wiring: a page registers typed tools on{" "}
+                <code className="mono">document.modelContext</code> and an
+                agent calls them. Every action a menu once hid becomes a
+                sentence — the learning curve shrinks to saying what you want.
+                What WebMCP doesn&rsquo;t handle is feedback. The agent can
+                call tools and navigate while the page shows nothing: not
+                what&rsquo;s happening, not what&rsquo;s possible, not even
+                that an agent is connected.
               </p>
-            </div>
-          </div>
-        </section>
+              <p className="m-0">
+                For headless automation, invisible is fine. In multiplayer,
+                the action has to be felt. Dolly is the rig that follows it —
+                showing what the agent can do, what it&rsquo;s doing, and what
+                it did — so the work lands on the page instead of happening
+                behind it.
+              </p>
+            </>
+          }
+        />
 
         {/* ---- Primitives ------------------------------------------ */}
-        <Primitive
+        <FeatureSection
           id="open-in"
-          title="The Open in ChatGPT button"
+          headline={
+            <>
+              The Open in
+              <br />
+              ChatGPT button
+            </>
+          }
+          subheadline={
+            <>
+              One click opens the site inside your agent — ChatGPT, Claude,
+              or Gemini — and multiplayer starts: chat on one side, the live
+              app on the other
+            </>
+          }
+          showTitle={
+            <>
+              The learning curve,
+              <br />
+              one sentence long
+            </>
+          }
+          showDescription={
+            <>
+              I believe buttons like this will be common. Land in an app
+              you&rsquo;ve never used, describe the outcome, and start
+              working — no tutorial, no hunting through menus. And the agent
+              shows up with context of its own: it already knows your
+              calendar, your contacts, and what you&rsquo;re trying to get
+              done.
+            </>
+          }
+          // Aside button hidden — the media button IS the live deeplink now.
+          media={<OpenInMedia />}
           code={OPEN_IN_SNIPPET}
-          aside={<OpenInButton agent="openai" className="btn-ghost" />}
-        >
-          <p className="m-0">
-            This component explores what a deep link into agent apps like
-            ChatGPT, Claude, and Gemini could look like. One click and the
-            site opens inside the agent, ready to be used in natural language.
-          </p>
-          <p className="m-0">
-            I believe buttons like this will be common. They shrink a
-            site&rsquo;s learning curve: nobody has to hunt through menus when
-            they can open the site in their agent and describe the outcome.
-            And the agent brings its own context — say &ldquo;add Mom to the
-            trip&rdquo; and it knows who Mom is.
-          </p>
-          <p className="m-0">
-            <code className="mono">OpenInButton</code> owns the deeplink —{" "}
-            <code className="mono">
-              chatgpt.com/codex/deeplink?url=&lt;your page&gt;
-            </code>{" "}
-            — and hides itself when the site is already inside an agent.
-          </p>
-        </Primitive>
+          docs={
+            <>
+              <p className="m-0">
+                <code className="mono">OpenInButton</code> builds the deeplink
+                for you —{" "}
+                <code className="mono">
+                  chatgpt.com/codex/deeplink?url=&lt;your page&gt;
+                </code>{" "}
+                — and hides itself when the site is already inside an agent.
+              </p>
+              <p className="m-0">
+                By default it links the current URL. Pass{" "}
+                <code className="mono">url</code> to deeplink a specific page,{" "}
+                <code className="mono">connectionParam</code> to change the
+                handshake param, and children to replace the button label.
+              </p>
+              <p className="m-0 text-[0.78rem] text-[var(--faint)]">
+                Note: ChatGPT is the only agent with a deeplink like this —
+                I couldn&rsquo;t find a standard way to open a page in Claude
+                or Gemini yet.
+              </p>
+            </>
+          }
+        />
 
-        <Primitive
+        <FeatureSection
           id="onboarding"
-          title="Onboarding, once inside"
-          code={ONBOARDING_SNIPPET}
+          headline={<>Onboarding, once inside</>}
+          subheadline={
+            <>
+              The deeplink gets you in the door, but I&rsquo;ve landed in an
+              app I&rsquo;ve never seen. What can it do? What do I ask?
+              Someone has to say
+            </>
+          }
+          showTitle={<>Treat arrival like a first launch</>}
+          showDescription={
+            <>
+              The way a mobile app greets its first open: show what&rsquo;s
+              possible, plant a few ideas, point at a first action.
+            </>
+          }
           aside={<OnboardingPreview />}
-        >
-          <p className="m-0">
-            Opening the site inside an agent isn&rsquo;t enough on its own. As
-            a user I still have no idea what this site can do. Not just what
-            the agent can do — what&rsquo;s even possible. A new kind of
-            onboarding is needed.
-          </p>
-          <p className="m-0">
-            Dolly treats arrival as an onboarding moment, the way a mobile app
-            treats first launch: show what&rsquo;s possible, plant a few
-            ideas, point at a first action. The deeplink carries{" "}
-            <code className="mono">?webmcpconnected=true</code>; when the
-            provider sees it, it stores the connection, cleans the URL, and
-            opens the onboarding dialog.
-          </p>
-          <p className="m-0">
-            The default dialog lists your capabilities. Pass{" "}
-            <code className="mono">steps</code> for a full image, title, and
-            description walkthrough, or call{" "}
-            <code className="mono">experience.openOnboarding()</code> to run
-            it any time.
-          </p>
-        </Primitive>
+          media={<OnboardingMedia />}
+          code={ONBOARDING_SNIPPET}
+          docs={
+            <>
+              <p className="m-0">
+                The deeplink carries{" "}
+                <code className="mono">?webmcpconnected=true</code>; when the
+                provider sees it, it stores the connection, cleans the URL,
+                and opens the onboarding dialog.
+              </p>
+              <p className="m-0">
+                The dialog&rsquo;s content comes from the provider. Each{" "}
+                <code className="mono">capabilities</code> entry — a title and
+                a one-line description — becomes a row in the default dialog,
+                so the Trip Planner above greets you with &ldquo;Plan a
+                trip&rdquo; and &ldquo;Invite people&rdquo;.
+              </p>
+              <p className="m-0">
+                For a fuller welcome, <code className="mono">steps</code>{" "}
+                replaces the list with a paged walkthrough — each step an
+                optional image, a title, and a description —
+                and <code className="mono">doneLabel</code> names the closing
+                button. <code className="mono">rig.openOnboarding()</code>{" "}
+                reopens the dialog any time, so a help menu can point back to
+                it.
+              </p>
+            </>
+          }
+        />
 
-        <Primitive
+        <FeatureSection
           id="connected"
-          title="Show the connection"
+          headline={<>Show the connection</>}
+          subheadline={
+            <>
+              New technology has to show it&rsquo;s working. Before anyone
+              types a prompt, the page should answer the first question: is
+              the agent actually connected?
+            </>
+          }
+          showTitle={<>Connected and ready to work</>}
+          showDescription={
+            <>
+              The header shows the connection and has room to reveal tools,
+              history, and live progress. It tracks the live phase, so
+              &ldquo;connected&rdquo; becomes &ldquo;working&rdquo; the
+              moment a tool runs.
+            </>
+          }
+          // Preview button hidden — the animated media tells the story.
+          media={<ConnectionMedia />}
           code={CONNECTED_SNIPPET}
-          aside={<ConnectedPreview />}
-        >
-          <p className="m-0">
-            New technology has to show it&rsquo;s working. ChatGPT defaults to
-            driving sites with its own browser tools; WebMCP makes it a
-            controlled, better experience — and the page should say so.
-            Before anyone types a prompt, it should answer a basic question:
-            we are connected and ready to work.
-          </p>
-          <p className="m-0">
-            The header is the full treatment: it shows the connection and has
-            room to reveal tools and info. The badge is a floating dot for a
-            lighter touch. Both track the live phase, so &ldquo;connected&rdquo;
-            becomes &ldquo;working&rdquo; the moment a tool runs.
-          </p>
-          <p className="m-0">
-            Detection is two separate signals.{" "}
-            <code className="mono">document.modelContext</code> means the
-            browser itself speaks WebMCP.{" "}
-            <code className="mono">detectAgent()</code> identifies which agent
-            injected the bridge, and the{" "}
-            <code className="mono">?webmcpconnected</code> handshake covers
-            agents that can&rsquo;t be detected directly.
-          </p>
-        </Primitive>
+          docs={
+            <>
+              <p className="m-0">
+                Detection is two separate signals.{" "}
+                <code className="mono">document.modelContext</code> means the
+                browser itself speaks WebMCP.{" "}
+                <code className="mono">detectAgent()</code> identifies which
+                agent injected the bridge, and the{" "}
+                <code className="mono">?webmcpconnected</code> handshake
+                covers agents that can&rsquo;t be detected directly.
+              </p>
+              <p className="m-0 text-[0.78rem] text-[var(--faint)]">
+                How it knows it&rsquo;s ChatGPT: the bridge leaves
+                fingerprints — a{" "}
+                <code className="mono">__codexWebMcpModelContext</code> global
+                and <code className="mono">codex</code>-prefixed methods on
+                the model context. <code className="mono">detectAgent()</code>{" "}
+                checks for them; other agents will need their own
+                fingerprints as they ship WebMCP support.
+              </p>
+            </>
+          }
+        />
 
-        <Primitive
+        <FeatureSection
           id="show-work"
-          title="Show the work"
-          code={WORK_SNIPPET}
+          headline={<>Show the work</>}
+          subheadline={
+            <>
+              This is the heart of it: follow the action. When a tool runs,
+              the page has to show it — today the only feedback is the
+              chat&rsquo;s own spinner. On the page, nothing moves
+            </>
+          }
+          showTitle={<>An app that feels alive</>}
+          showDescription={
+            <>
+              That&rsquo;s the difference: a live partner in the work, not
+              dumb HTML being invisibly poked and prodded.
+            </>
+          }
           aside={<ShowWorkPreview />}
-        >
-          <p className="m-0">
-            This is the most important part: follow the action. When a WebMCP
-            tool is called, the UI needs to show it — today the only feedback
-            is the chat&rsquo;s own spinner. On the page, nothing moves.
-          </p>
-          <p className="m-0">
-            Dolly gives the tool&rsquo;s <code className="mono">execute()</code>{" "}
-            a visible lifecycle. <code className="mono">startWork</code> with{" "}
-            <code className="mono">overlay: true</code> pulses a full-screen
-            glow around the viewport edges. <code className="mono">focus()</code>{" "}
-            outlines the element being changed and dims the rest of the page
-            into a spotlight. <code className="mono">progress()</code> streams
-            updates from inside the call, so long tools narrate themselves.{" "}
-            <code className="mono">endWork</code> and{" "}
-            <code className="mono">failWork</code> settle it with a toast.
-          </p>
-          <p className="m-0">
-            That is the difference between an app that feels alive in
-            multiplayer and dumb HTML being invisibly poked and prodded.
-          </p>
-        </Primitive>
+          media={<ShowWorkMedia />}
+          code={WORK_SNIPPET}
+          docs={
+            <>
+              <p className="m-0">
+                Dolly gives the tool&rsquo;s{" "}
+                <code className="mono">execute()</code> a visible lifecycle.{" "}
+                <code className="mono">startWork</code> with{" "}
+                <code className="mono">overlay: true</code> pulses a
+                full-screen glow around the viewport edges.{" "}
+                <code className="mono">focus()</code> outlines the element
+                being changed and dims the rest of the page into a spotlight.{" "}
+                <code className="mono">progress()</code> streams updates from
+                inside the call, so long tools narrate themselves.{" "}
+                <code className="mono">endWork</code> and{" "}
+                <code className="mono">failWork</code> settle it with a toast.
+              </p>
+            </>
+          }
+        />
 
-        <Primitive
+        <FeatureSection
           id="history"
-          title="Show what happened"
-          code={HISTORY_SNIPPET}
+          headline={<>Show what happened</>}
+          subheadline={
+            <>
+              One agent turn can call several tools: add something, search,
+              navigate somewhere. For the agent to feel like a partner in the
+              work, you need a simple log of what happened. What exactly did
+              it do?
+            </>
+          }
+          showTitle={<>Magic, with a receipt</>}
+          showDescription={
+            <>
+              It has to feel like magic when the agent just does things, and
+              you need a way to audit the trick when it goes wrong — like
+              discovering it deleted your favourite pasta sauce from the
+              shopping cart.
+            </>
+          }
           aside={<HistoryPreview />}
-        >
-          <p className="m-0">
-            One agent turn can call several tools: add something, search,
-            navigate somewhere. For the agent to feel like a partner in the
-            work, you need a simple log of what happened — the receipt. What
-            exactly did it do?
-          </p>
-          <p className="m-0">
-            Tools declare a <code className="mono">log</code> template and
-            Dolly records a readable, timestamped event each time they run.{" "}
-            <code className="mono">logTask()</code> records anything else by
-            hand. The history drawer shows it all, newest first.
-          </p>
-          <p className="m-0">
-            It has to feel like magic when the agent just does things, and you
-            need a way to audit the trick when it goes wrong — like
-            discovering it deleted your favourite pasta sauce from the
-            shopping cart.
-          </p>
-          <p className="m-0">
-            The log is also the natural home for undo, retries, and error
-            recovery. Those controls aren&rsquo;t in the SDK demo, but this is
-            the place they&rsquo;d live.
-          </p>
-        </Primitive>
+          media={<HistoryMedia />}
+          code={HISTORY_SNIPPET}
+          docs={
+            <>
+              <p className="m-0">
+                Tools declare a <code className="mono">log</code> template and
+                Dolly records a readable, timestamped event each time they
+                run. <code className="mono">logTask()</code> records anything
+                else by hand. The history drawer shows it all, newest first.
+              </p>
+              <p className="m-0">
+                The log is also the natural home for undo, retries, and error
+                recovery. Those controls aren&rsquo;t in the SDK demo, but
+                this is the place they&rsquo;d live.
+              </p>
+            </>
+          }
+        />
 
-        <Primitive
+        <FeatureSection
           id="permission"
-          title="Ask for permission"
-          code={PERMISSION_SNIPPET}
+          headline={<>Ask for permission</>}
+          subheadline={
+            <>
+              Some things an agent shouldn&rsquo;t do on its own. For those,
+              the tool pauses mid-execute and waits: the page pops an
+              are-you-sure, and it resumes or aborts with the answer
+            </>
+          }
+          showTitle={<>A human stays in the loop</>}
+          showDescription={
+            <>
+              Keep destructive confirmations click-only, and let the
+              countdown default through the safe ones.
+            </>
+          }
           aside={<PermissionPreview />}
-        >
-          <p className="m-0">
-            Anything destructive, or anything that updates something
-            important, should keep a human in the loop. A tool pauses
-            mid-execute and waits: the agent asks to delete something, the
-            page pops an are-you-sure, and the tool resumes or aborts with
-            the answer. <code className="mono">confirm()</code> returns a
-            promise that only settles when a person decides — the
-            agent&rsquo;s tool call simply waits on the other end.
-          </p>
-          <p className="m-0">
-            By default the dialog waits indefinitely: nothing happens until
-            Continue or Cancel is clicked. For routine confirmations,{" "}
-            <code className="mono">autoContinueMs</code> approves after a
-            countdown — ticking down on the button with a progress bar along
-            the dialog edge, and pausing while the pointer hovers, so a hand
-            reaching for Cancel is never raced by the timer.
-          </p>
-          <p className="m-0">
-            Keep destructive confirmations click-only, and let the countdown
-            default through the safe ones.
-          </p>
-        </Primitive>
+          media={<PermissionMedia />}
+          code={PERMISSION_SNIPPET}
+          docs={
+            <>
+              <p className="m-0">
+                <code className="mono">confirm()</code> returns a promise that
+                only settles when a person decides — the agent&rsquo;s tool
+                call simply waits on the other end.
+              </p>
+              <p className="m-0">
+                By default the dialog waits indefinitely: nothing happens
+                until Continue or Cancel is clicked. For routine
+                confirmations, <code className="mono">autoContinueMs</code>{" "}
+                approves after a countdown — ticking down on the button with a
+                progress bar along the dialog edge, and pausing while the
+                pointer hovers, so a hand reaching for Cancel is never raced
+                by the timer.
+              </p>
+            </>
+          }
+        />
 
-        <Primitive
+        <FeatureSection
           id="tools"
-          title="Show what's possible"
-          code={TOOLS_SNIPPET}
+          headline={<>Show what&rsquo;s possible</>}
+          subheadline={
+            <>
+              The tools drawer shows the full range of what you and the agent
+              can do together. Keyboard shortcuts, but for the agent
+            </>
+          }
+          showTitle={<>Set expectations up front</>}
+          showDescription={
+            <>
+              To a user the agent is a black box — ask for something the site
+              can&rsquo;t do and it fails quietly, reading as broken. Listing
+              the tools heads that off, and the example prompts double as
+              suggestions for what to try.
+            </>
+          }
           aside={<ToolsPreview />}
-        >
-          <p className="m-0">
-            The tools drawer is the range of what you and the agent can do
-            together. Every tool registered with{" "}
-            <code className="mono">useWebMCPTool</code> can carry an example
-            prompt, and the drawer lists them all. Keyboard shortcuts, but
-            for the agent.
-          </p>
-          <p className="m-0">
-            It sets expectations. To a user the agent is a black box, and
-            asking for something the site can&rsquo;t do fails quietly and
-            reads as broken. Showing the range up front avoids that
-            frustration, and the example prompts double as suggestions for
-            how to use it.
-          </p>
-        </Primitive>
+          media={<ToolsMedia />}
+          code={TOOLS_SNIPPET}
+          docs={
+            <>
+              <p className="m-0">
+                Every tool registered with{" "}
+                <code className="mono">useWebMCPTool</code> can carry an{" "}
+                <code className="mono">example</code> prompt, and the drawer
+                lists them all under &ldquo;Try asking&rdquo;.
+              </p>
+              <p className="m-0">
+                <code className="mono">AgentToolsDrawer</code> renders the
+                list — open it from anywhere, or let the status header reveal
+                it.
+              </p>
+            </>
+          }
+        />
 
-        <Primitive
+        {/* ---- Branding — hidden for now --------------------------- */}
+        {/*
+        <FeatureSection
           id="styling"
-          title="Branding and styling"
+          headline={<>Branding and styling</>}
+          subheadline={
+            <>
+              Agent chrome should feel native — part of the site, not bolted
+              on.
+            </>
+          }
+          showTitle={<>One theme for every surface.</>}
+          showDescription={
+            <>
+              Every surface reads from one theme: a mode, a brand color, and
+              a subtle tint. That covers the onboarding dialog, both drawers,
+              the status surfaces, and the work toast.
+            </>
+          }
           code={STYLING_SNIPPET}
-        >
-          <p className="m-0">
-            Agent chrome should feel native — part of the site, not bolted
-            on. Every surface reads from one theme: a mode, a brand color,
-            and a subtle tint. That covers the onboarding dialog, both
-            drawers, the status surfaces, and the work toast.
-          </p>
-          <p className="m-0">
-            The glow and the highlight take their own options when you want
-            more control, and every component accepts{" "}
-            <code className="mono">className</code> overrides.
-          </p>
-        </Primitive>
+          docs={
+            <>
+              <p className="m-0">
+                The glow and the highlight take their own options when you
+                want more control, and every component accepts{" "}
+                <code className="mono">className</code> overrides.
+              </p>
+            </>
+          }
+        />
+        */}
 
-        <Primitive
+        <FeatureSection
           id="api"
-          title="A simple API"
-          code={API_SNIPPET}
+          headline={<>A simple API</>}
+          subheadline={
+            <>
+              Adding all of this is one{" "}
+              <code className="mono text-[0.85em]">&lt;RigProvider&gt;</code>{" "}
+              around the app, one{" "}
+              <code className="mono text-[0.85em]">useWebMCPTool</code> per
+              tool, and a handful of imperative calls —{" "}
+              <code className="mono text-[0.85em]">startWork</code>,{" "}
+              <code className="mono text-[0.85em]">confirm</code>,{" "}
+              <code className="mono text-[0.85em]">logTask</code> — dropped
+              into code you already have
+            </>
+          }
+          hideShowcase
+          showTitle={
+            <>
+              One hook registers,
+              <br />
+              narrates, and logs
+            </>
+          }
+          showDescription={
+            <>
+              Register a tool, narrate its work, log what happened —
+              that&rsquo;s the whole rig.
+            </>
+          }
           aside={<ApiPreview />}
-        >
-          <p className="m-0">
-            Adding all of this is one provider, one hook, and a handful of
-            imperative calls. Register a tool, narrate its work, log what
-            happened.
-          </p>
-          <p className="m-0">
-            <code className="mono">useWebMCPTool</code> registers against{" "}
-            <code className="mono">document.modelContext</code>, unregisters
-            on unmount, and does nothing when no bridge exists — the site
-            works exactly the same without an agent.
-          </p>
-        </Primitive>
+          media={<ApiMedia />}
+          code={API_SNIPPET}
+          docs={
+            <>
+              <p className="m-0">
+                The core is what the agent sees:{" "}
+                <code className="mono">name</code> and{" "}
+                <code className="mono">description</code> tell it what the
+                tool does, <code className="mono">inputSchema</code> types
+                the arguments it must send, and{" "}
+                <code className="mono">execute()</code> is plain async code —
+                call your own functions, return a result.
+              </p>
+              <p className="m-0">
+                The rest wires up the primitives above:{" "}
+                <code className="mono">example</code> feeds the tools
+                drawer&rsquo;s &ldquo;Try asking&rdquo; list,{" "}
+                <code className="mono">log</code> writes the receipt when the
+                tool succeeds, and <code className="mono">startWork</code>/
+                <code className="mono">endWork</code> inside{" "}
+                <code className="mono">execute()</code> narrate the run on
+                the page. One registration touches every surface.
+              </p>
+              <p className="m-0">
+                <code className="mono">useWebMCPTool</code> registers against{" "}
+                <code className="mono">document.modelContext</code>,
+                unregisters on unmount, and does nothing when no bridge
+                exists — the site works exactly the same without an agent.
+              </p>
+            </>
+          }
+        />
 
       </main>
 
@@ -673,17 +828,80 @@ export default function Home() {
           id="screen-tests"
         >
           <div className="mx-auto max-w-3xl text-center">
-            <h2 className="m-0 text-3xl tracking-tight text-[var(--silver)]">
-              Try it on this very page.
+            <h2 className="m-0 text-5xl leading-[1.05] tracking-wide text-[var(--silver)] sm:text-6xl">
+              This page is rigged
             </h2>
-            <p className="mx-auto mt-4 max-w-2xl text-lg leading-relaxed text-[var(--muted)]">
-              This site runs the SDK it describes. Every trigger below calls
-              the real provider, and the same actions are registered as live
-              WebMCP tools an agent can call.
+            <p className="mx-auto mt-6 max-w-2xl text-xl leading-relaxed text-pretty text-[var(--muted)]">
+              This site runs the SDK it describes. Every button below drives
+              the real provider, and the same actions are registered as
+              WebMCP tools an agent can call
             </p>
           </div>
           <div className="mt-14">
             <ScreenTests />
+          </div>
+        </section>
+
+        {/* ---- Other ideas ----------------------------------------- */}
+        <section className="mx-auto max-w-6xl px-6 pb-24 pt-4">
+          <p className="m-0 text-center text-base font-medium text-[var(--silver)]">
+            Other ideas for how WebMCP can evolve
+          </p>
+          <div className="mx-auto mt-6 grid max-w-2xl gap-4 sm:grid-cols-2">
+            <div className="rounded-2xl border border-white/40 bg-white/75 p-5 shadow-[0_8px_30px_rgba(19,19,40,0.08)] backdrop-blur-md">
+              <span className="grid size-9 place-items-center rounded-full bg-[#8cfffd]/60 text-[var(--screen-deep)]">
+                {/* Lucide panel-right */}
+                <svg
+                  viewBox="0 0 24 24"
+                  width="17"
+                  height="17"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  aria-hidden="true"
+                >
+                  <rect width="18" height="18" x="3" y="3" rx="2" />
+                  <path d="M15 3v18" />
+                </svg>
+              </span>
+              <p className="m-0 mt-3 text-lg font-medium text-[var(--silver)]">
+                Agent responsive design
+              </p>
+              <p className="m-0 mt-1 text-sm leading-relaxed text-pretty text-[var(--muted)]">
+                Like mobile design — a CSS media query for when an agent is
+                present, so designers can make the site feel native beside a
+                chat box
+              </p>
+            </div>
+            <div className="rounded-2xl border border-white/40 bg-white/75 p-5 shadow-[0_8px_30px_rgba(19,19,40,0.08)] backdrop-blur-md">
+              <span className="grid size-9 place-items-center rounded-full bg-[#8cfffd]/60 text-[var(--screen-deep)]">
+                {/* Lucide message-square-plus */}
+                <svg
+                  viewBox="0 0 24 24"
+                  width="17"
+                  height="17"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  aria-hidden="true"
+                >
+                  <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
+                  <path d="M12 7v6" />
+                  <path d="M9 10h6" />
+                </svg>
+              </span>
+              <p className="m-0 mt-3 text-lg font-medium text-[var(--silver)]">
+                Suggested prompt triggers
+              </p>
+              <p className="m-0 mt-1 text-sm leading-relaxed text-pretty text-[var(--muted)]">
+                An API to drop a suggested prompt straight into the
+                agent&rsquo;s chat box, ready to send
+              </p>
+            </div>
           </div>
         </section>
 

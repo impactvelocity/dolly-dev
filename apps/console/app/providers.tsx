@@ -1,6 +1,6 @@
 "use client";
 
-import { WebMCPExperienceProvider, useWebMCPExperience } from "@webmcp-sdk/experience";
+import { RigProvider, useRig } from "@dolly/rig";
 import { useEffect, type ReactNode } from "react";
 
 import { AppShell } from "./app-shell";
@@ -50,22 +50,22 @@ const capabilities = [
   },
 ];
 
-// Dev helper: expose the experience API on window so the work states can be
+// Dev helper: expose the rig API on window so the work states can be
 // triggered from the browser console without a connected agent.
-function DevExperienceHandle() {
-  const experience = useWebMCPExperience();
+function DevRigHandle() {
+  const rig = useRig();
   useEffect(() => {
-    (window as unknown as Record<string, unknown>).__webmcpExperience = experience;
-  }, [experience]);
+    (window as unknown as Record<string, unknown>).__webmcpRig = rig;
+  }, [rig]);
   return null;
 }
 
-function ExperienceShell({ children }: { children: ReactNode }) {
+function RigShell({ children }: { children: ReactNode }) {
   const { settings } = useCrm();
   const { config } = useDevConfig();
 
   return (
-    <WebMCPExperienceProvider
+    <RigProvider
       appName={settings.crmName}
       capabilities={capabilities}
       onboarding={onboarding}
@@ -86,10 +86,10 @@ function ExperienceShell({ children }: { children: ReactNode }) {
       }}
     >
       <DebugProbe />
-      <DevExperienceHandle />
+      <DevRigHandle />
       <CrmWebMCPTools />
       <AppShell>{children}</AppShell>
-    </WebMCPExperienceProvider>
+    </RigProvider>
   );
 }
 
@@ -97,7 +97,7 @@ export function CrmProviders({ children }: { children: ReactNode }) {
   return (
     <CrmProvider>
       <DevConfigProvider>
-        <ExperienceShell>{children}</ExperienceShell>
+        <RigShell>{children}</RigShell>
       </DevConfigProvider>
     </CrmProvider>
   );

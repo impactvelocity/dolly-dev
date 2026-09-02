@@ -18,7 +18,6 @@ import { useCrm } from "../crm-store";
 
 export default function SettingsPage() {
   const { settings, updateSettings, resetData } = useCrm();
-  const [crmName, setCrmName] = useState(settings.crmName);
   const [workspaceName, setWorkspaceName] = useState(settings.workspaceName);
   const [saved, setSaved] = useState(false);
 
@@ -26,14 +25,12 @@ export default function SettingsPage() {
   const [prevSettings, setPrevSettings] = useState(settings);
   if (prevSettings !== settings) {
     setPrevSettings(settings);
-    setCrmName(settings.crmName);
     setWorkspaceName(settings.workspaceName);
   }
 
   const handleSubmit = (event: React.FormEvent) => {
     event.preventDefault();
     updateSettings({
-      crmName: crmName.trim() || settings.crmName,
       workspaceName: workspaceName.trim() || settings.workspaceName,
     });
     setSaved(true);
@@ -43,7 +40,7 @@ export default function SettingsPage() {
   return (
     <div className="mx-auto w-full max-w-[1220px] px-7 pt-8 pb-12 max-sm:px-4 max-sm:pt-6">
       <div className="mb-6">
-        <h1 className="font-heading text-2xl">Settings</h1>
+        <h1 className="font-heading text-[28px]">Settings</h1>
         <p className="mt-1 text-sm text-muted-foreground">
           Workspace preferences for this demo. Everything is stored in your browser.
         </p>
@@ -52,19 +49,10 @@ export default function SettingsPage() {
       <Card id="crm-settings" className="mb-3.5">
         <CardHeader className="border-b p-4.5">
           <CardTitle className="text-[15px] font-normal">Workspace</CardTitle>
-          <CardDescription className="text-[13px]">Names shown across the app.</CardDescription>
+          <CardDescription className="text-[13px]">Name shown across the app.</CardDescription>
         </CardHeader>
         <CardPanel className="p-4.5">
           <form className="flex max-w-105 flex-col gap-4" onSubmit={handleSubmit}>
-            <Field>
-              <FieldLabel>CRM name</FieldLabel>
-              <Input
-                type="text"
-                value={crmName}
-                onChange={(event) => setCrmName(event.target.value)}
-                placeholder="Relay CRM"
-              />
-            </Field>
             <Field>
               <FieldLabel>Workspace name</FieldLabel>
               <Input
@@ -77,7 +65,7 @@ export default function SettingsPage() {
             <div className="flex items-center gap-3">
               <Button type="submit">Save changes</Button>
               {saved ? (
-                <span className="text-xs font-semibold text-success-foreground">Saved</span>
+                <span className="text-xs font-medium text-success-foreground">Saved</span>
               ) : null}
             </div>
           </form>

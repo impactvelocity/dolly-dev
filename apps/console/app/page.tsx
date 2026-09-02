@@ -10,7 +10,6 @@ import {
   CardAction,
   CardDescription,
   CardHeader,
-  CardPanel,
   CardTitle,
 } from "@/components/ui/card";
 import {
@@ -40,7 +39,7 @@ export default function DashboardPage() {
   return (
     <div className="mx-auto w-full max-w-[1220px] px-7 pt-8 pb-12 max-sm:px-4 max-sm:pt-6">
       <div className="mb-6">
-        <h1 className="font-heading text-2xl">Dashboard</h1>
+        <h1 className="font-heading text-[28px]">Dashboard</h1>
         <p className="mt-1 text-sm text-muted-foreground">
           Track your contacts, deals, and pipeline at a glance.
         </p>
@@ -51,47 +50,47 @@ export default function DashboardPage() {
         className="grid grid-cols-3 gap-3.5 max-sm:grid-cols-1"
         aria-label="Key metrics"
       >
-        <Card>
-          <CardPanel className="p-5">
-            <p className="text-xs font-medium text-muted-foreground">Open pipeline</p>
-            <strong className="mt-3 block font-heading text-[28px] font-normal">
+        <Card className="p-2">
+          <div className="px-3.5 pt-3.5 pb-5">
+            <p className="text-[13px] font-medium text-muted-foreground">Open pipeline</p>
+            <strong className="mt-2.5 block font-heading text-[28px] font-normal">
               {formatCurrency(openValue)}
             </strong>
-            <small className="mt-2 block text-[11px] text-muted-foreground">
-              <b className="font-semibold text-foreground">{openDeals.length} open deals</b> across{" "}
-              {DEAL_STAGES.length - 1} stages
-            </small>
-          </CardPanel>
+          </div>
+          <div className="mt-auto rounded-[10px] bg-muted/72 px-3.5 py-3 text-xs text-muted-foreground">
+            <b className="font-medium text-foreground">{openDeals.length} open deals</b> across{" "}
+            {DEAL_STAGES.length - 1} stages
+          </div>
         </Card>
-        <Card>
-          <CardPanel className="p-5">
-            <p className="text-xs font-medium text-muted-foreground">Contacts</p>
-            <strong className="mt-3 block font-heading text-[28px] font-normal">
+        <Card className="p-2">
+          <div className="px-3.5 pt-3.5 pb-5">
+            <p className="text-[13px] font-medium text-muted-foreground">Contacts</p>
+            <strong className="mt-2.5 block font-heading text-[28px] font-normal">
               {contacts.length}
             </strong>
-            <small className="mt-2 block text-[11px] text-muted-foreground">
-              <b className="font-semibold text-foreground">
-                {contacts.filter((contact) => contact.status === "Lead").length} leads
-              </b>{" "}
-              awaiting follow-up
-            </small>
-          </CardPanel>
+          </div>
+          <div className="mt-auto rounded-[10px] bg-muted/72 px-3.5 py-3 text-xs text-muted-foreground">
+            <b className="font-medium text-foreground">
+              {contacts.filter((contact) => contact.status === "Lead").length} leads
+            </b>{" "}
+            awaiting follow-up
+          </div>
         </Card>
-        <Card>
-          <CardPanel className="p-5">
-            <p className="text-xs font-medium text-muted-foreground">Win rate</p>
-            <strong className="mt-3 block font-heading text-[28px] font-normal">{winRate}%</strong>
-            <small className="mt-2 block text-[11px] text-muted-foreground">
-              Across {deals.length} deals this quarter
-            </small>
-          </CardPanel>
+        <Card className="p-2">
+          <div className="px-3.5 pt-3.5 pb-5">
+            <p className="text-[13px] font-medium text-muted-foreground">Win rate</p>
+            <strong className="mt-2.5 block font-heading text-[28px] font-normal">{winRate}%</strong>
+          </div>
+          <div className="mt-auto rounded-[10px] bg-muted/72 px-3.5 py-3 text-xs text-muted-foreground">
+            Across {deals.length} deals this quarter
+          </div>
         </Card>
       </section>
 
       <div className="mt-3.5 grid grid-cols-[minmax(0,1.45fr)_minmax(260px,.55fr)] items-start gap-3.5 max-md:grid-cols-1">
         <Card id="contacts">
           <CardHeader className="border-b p-4.5">
-            <CardTitle className="text-[15px] font-normal">Recent contacts</CardTitle>
+            <CardTitle>Recent contacts</CardTitle>
             <CardDescription className="text-[13px]">
               The people your team talked to last.
             </CardDescription>
@@ -122,24 +121,24 @@ export default function DashboardPage() {
                   <TableRow key={contact.id}>
                     <TableCell className="px-4 py-3">
                       <span className="flex items-center gap-2.5">
-                        <Avatar className="size-7 border text-[9px] font-semibold">
+                        <Avatar className="size-7 border text-[9px] font-medium">
                           <AvatarFallback>{initials(contact.name)}</AvatarFallback>
                         </Avatar>
                         <span className="leading-tight">
-                          <strong className="block text-xs font-semibold">{contact.name}</strong>
-                          <small className="mt-0.5 block text-[11px] text-muted-foreground">
+                          <strong className="block text-[13px] font-medium">{contact.name}</strong>
+                          <small className="mt-0.5 block text-xs text-muted-foreground">
                             {contact.company}
                           </small>
                         </span>
                       </span>
                     </TableCell>
-                    <TableCell className="px-4 font-mono text-[11px] text-muted-foreground">
+                    <TableCell className="px-4 font-mono text-xs text-muted-foreground">
                       {contact.email}
                     </TableCell>
                     <TableCell className="px-4">
                       <Badge variant={STATUS_BADGE_VARIANT[contact.status]}>{contact.status}</Badge>
                     </TableCell>
-                    <TableCell className="px-4 text-xs">{contact.lastActivity}</TableCell>
+                    <TableCell className="px-4 text-[13px]">{contact.lastActivity}</TableCell>
                   </TableRow>
                 ))
               )}
@@ -149,7 +148,7 @@ export default function DashboardPage() {
 
         <Card id="deals">
           <CardHeader className="border-b p-4.5">
-            <CardTitle className="text-[15px] font-normal">Deals</CardTitle>
+            <CardTitle>Deals</CardTitle>
             <CardDescription className="text-[13px]">Active pipeline by stage.</CardDescription>
             <CardAction>
               <Button variant="outline" size="sm" render={<Link href="/deals" />}>
@@ -171,13 +170,13 @@ export default function DashboardPage() {
                   }`}
                 >
                   <span className="min-w-0 leading-tight">
-                    <strong className="block truncate text-xs font-semibold">{deal.name}</strong>
-                    <small className="mt-0.5 block truncate text-[11px] text-muted-foreground">
+                    <strong className="block truncate text-[13px] font-medium">{deal.name}</strong>
+                    <small className="mt-0.5 block truncate text-xs text-muted-foreground">
                       {deal.company}
                     </small>
                   </span>
                   <span className="flex shrink-0 flex-col items-end gap-1">
-                    <b className="font-mono text-[11px] font-semibold">
+                    <b className="font-mono text-xs font-medium">
                       {formatCurrency(deal.value)}
                     </b>
                     <Badge size="sm" variant={STAGE_BADGE_VARIANT[deal.stage]}>
