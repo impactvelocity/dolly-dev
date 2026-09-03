@@ -419,7 +419,7 @@ h3 {
   z-index: 5;
   overflow: hidden;
   pointer-events: none;
-  border: 2px solid #06b6d4;
+  border: 2px solid rgba(6, 182, 212, 0.45);
   animation: demo-pop 0.5s ease both;
 }
 .demo-glow__layer {
@@ -435,8 +435,8 @@ h3 {
     demo-glow-shift 7s linear infinite;
 }
 @keyframes demo-glow-pulse {
-  0%, 100% { opacity: 0.6; }
-  50% { opacity: 1; }
+  0%, 100% { opacity: 0.25; }
+  50% { opacity: 0.45; }
 }
 @keyframes demo-glow-shift {
   0% { background-position: 0% 50%; }

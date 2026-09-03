@@ -351,7 +351,7 @@ export function CrmWebMCPTools() {
     name: "update_deal_stage",
     example: "Move the Brightline deal to Won",
     description:
-      "Move a deal to a new pipeline stage. Match the deal by its name or company. Stages: Qualified, Proposal, Negotiation, Won. The person is asked to approve the change before it happens.",
+      "Move a deal to a new pipeline stage. Match the deal by its name or company. Stages: Qualified, Proposal, Negotiation, Won.",
     inputSchema: {
       type: "object",
       properties: {
@@ -385,22 +385,6 @@ export function CrmWebMCPTools() {
             { type: "text", text: `“${stage}” is not a valid stage. Use one of: ${DEAL_STAGES.join(", ")}.` },
           ],
           isError: true,
-        };
-      }
-
-      const approved = await rig.confirm({
-        title: `Move ${match.name} to ${stage}?`,
-        description: `The agent wants to move “${match.name}” (${match.company}, ${formatCurrency(match.value)}) from ${match.stage} to ${stage}.`,
-        tone: "positive",
-        confirmLabel: "Update",
-        autoContinueMs: 5000,
-      });
-      if (!approved) {
-        rig.failWork(`Moving ${match.name} was cancelled`);
-        return {
-          content: [
-            { type: "text", text: `The user cancelled moving the ${match.name} deal. Nothing was changed.` },
-          ],
         };
       }
 
