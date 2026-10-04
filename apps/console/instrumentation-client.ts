@@ -2,7 +2,7 @@ import posthog from "posthog-js";
 
 // Stamped onto every event so all Dolly traffic can be filtered by
 // `project`, and split by `surface` (site, app, docs, ...).
-const tags = { project: "dolly-dev", surface: "site" };
+const tags = { project: "dolly-dev", surface: "app" };
 
 // Runs once on the client before hydration. `defaults` turns on automatic
 // pageview capture, including client-side route changes.

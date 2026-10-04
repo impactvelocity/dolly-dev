@@ -19,6 +19,7 @@
     "geist": "catalog:",
     "lucide-react": "^1.37.0",
     "next": "catalog:",
+    "posthog-js": "^1.435.8",
     "react": "catalog:",
     "react-beautiful-color": "^2.1.0",
     "react-dom": "catalog:",
